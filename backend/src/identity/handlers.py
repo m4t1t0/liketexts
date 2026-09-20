@@ -7,6 +7,7 @@ from backend.src.identity.commands import (
     LoginCommand,
     RefreshTokenCommand,
     RegisterCommand,
+    UpdateProfileCommand,
 )
 from backend.src.identity.domain.model import User
 from backend.src.identity.domain.repository import UserRepository, SessionRepository
@@ -63,6 +64,24 @@ class RefreshTokenHandler(CommandHandler[RefreshTokenCommand, TokenPair]):
 
     def handle(self, command: RefreshTokenCommand) -> TokenPair:
         return self._auth.refresh_tokens(command.refresh_token)
+
+
+class UpdateProfileHandler(CommandHandler[UpdateProfileCommand, User]):
+    """Handler for updating editable profile fields."""
+
+    def __init__(self, user_repo: UserRepository) -> None:
+        self._user_repo = user_repo
+
+    def handle(self, command: UpdateProfileCommand) -> User:
+        user = self._user_repo.get(command.user_id.value)
+        if not user:
+            raise ValueError("User not found")
+        user.update_profile(
+            first_name=command.first_name,
+            last_name=command.last_name,
+            avatar_url=command.avatar_url,
+        )
+        return user
 
 
 class GetProfileHandler(CommandHandler[GetProfileCommand, User]):

@@ -198,6 +198,18 @@ SCHEMAS: dict[str, Any] = {
             "is_reader": {"type": "boolean"},
         },
     },
+    "UpdateProfileRequest": {
+        "type": "object",
+        "description": (
+            "Partial profile update — only present keys are changed. "
+            "Send an empty string or null to clear a field."
+        ),
+        "properties": {
+            "first_name": _NULLABLE_STR,
+            "last_name": _NULLABLE_STR,
+            "avatar_url": _NULLABLE_STR,
+        },
+    },
     "PostView": {
         "type": "object",
         "description": (
@@ -584,6 +596,56 @@ PATHS: list[dict[str, Any]] = [
             tags=["Identity"],
             responses={"200": _json_response("Profile with capabilities.", _ref("Profile"))},
         ),
+    },
+    {
+        "path": "/api/v1/auth/me",
+        "methods": ["PATCH"],
+        "op": _op(
+            "Update current user profile",
+            tags=["Identity"],
+            description=(
+                "Partial update of first/last name and avatar URL. "
+                "Only present keys are changed; empty string or null clears a field."
+            ),
+            request_body=_body(_ref("UpdateProfileRequest"), required=False),
+            responses={
+                "200": _json_response("Updated profile.", _ref("Profile")),
+                "400": _error_response("No editable fields or invalid values."),
+            },
+        ),
+    },
+    {
+        "path": "/api/v1/auth/avatar",
+        "methods": ["POST"],
+        "op": {
+            "summary": "Upload a profile picture",
+            "tags": ["Identity"],
+            "description": (
+                "Multipart upload (`file`: png/jpg/jpeg/webp/gif, max 2 MB). "
+                "Stores the file locally, points `avatar_url` at it, and "
+                "removes the previous locally stored avatar."
+            ),
+            "requestBody": {
+                "required": True,
+                "content": {
+                    "multipart/form-data": {
+                        "schema": {
+                            "type": "object",
+                            "required": ["file"],
+                            "properties": {
+                                "file": {"type": "string", "format": "binary"}
+                            },
+                        }
+                    }
+                },
+            },
+            "responses": {
+                "201": _json_response("Updated profile.", _ref("Profile")),
+                "400": _error_response("Missing file, unsupported type, or too large."),
+                "401": _error_response("Missing, invalid, or expired access token."),
+            },
+            "security": [{"bearerAuth": []}],
+        },
     },
     {
         "path": "/api/v1/writers",

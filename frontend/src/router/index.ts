@@ -7,6 +7,7 @@ import RegisterView from "../views/RegisterView.vue";
 import ReaderView from "../views/ReaderView.vue";
 import WriterView from "../views/WriterView.vue";
 import PostView from "../views/PostView.vue";
+import ProfileView from "../views/ProfileView.vue";
 import WriterDetailView from "../views/WriterDetailView.vue";
 
 const router = createRouter({
@@ -18,6 +19,7 @@ const router = createRouter({
     { path: "/privacy", name: "privacy", component: PrivacyView },
     { path: "/reader", name: "reader", component: ReaderView, meta: { requiresAuth: true } },
     { path: "/writer", name: "writer", component: WriterView, meta: { requiresAuth: true } },
+    { path: "/profile", name: "profile", component: ProfileView, meta: { requiresAuth: true } },
     { path: "/posts/:id", name: "post", component: PostView },
     { path: "/writers/:id", name: "writer-detail", component: WriterDetailView },
   ],

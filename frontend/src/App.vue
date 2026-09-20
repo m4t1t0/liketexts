@@ -20,6 +20,7 @@ function logout(): void {
         <template v-if="auth.isLoggedIn">
           <RouterLink to="/reader" class="hover:underline">Reader</RouterLink>
           <RouterLink to="/writer" class="hover:underline">Writer</RouterLink>
+          <RouterLink to="/profile" class="hover:underline">Profile</RouterLink>
           <button class="text-stone-500 hover:underline" @click="logout">Logout</button>
         </template>
         <template v-else>

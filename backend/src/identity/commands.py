@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from backend.src.identity.domain.model import UNSET, MaybeStr
 from backend.src.shared.domain.value_objects import UserId
 from backend.src.shared.service_layer.messagebus import Command
 
@@ -43,3 +44,13 @@ class GetProfileCommand(Command):
     """Command to get current user profile."""
 
     user_id: UserId
+
+
+@dataclass(frozen=True)
+class UpdateProfileCommand(Command):
+    """Command to update editable profile fields (UNSET = unchanged)."""
+
+    user_id: UserId
+    first_name: MaybeStr = UNSET
+    last_name: MaybeStr = UNSET
+    avatar_url: MaybeStr = UNSET

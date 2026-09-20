@@ -12,6 +12,18 @@ export const useAuthStore = defineStore("auth", () => {
     profile.value = await api.me();
   }
 
+  async function updateProfile(input: {
+    first_name?: string | null;
+    last_name?: string | null;
+    avatar_url?: string | null;
+  }): Promise<void> {
+    profile.value = await api.updateProfile(input);
+  }
+
+  async function uploadAvatar(file: File): Promise<void> {
+    profile.value = await api.uploadAvatar(file);
+  }
+
   async function login(email: string, password: string): Promise<void> {
     const pair = await api.login(email, password);
     setToken(pair.access_token);
@@ -34,5 +46,5 @@ export const useAuthStore = defineStore("auth", () => {
     profile.value = null;
   }
 
-  return { token, profile, isLoggedIn, login, register, logout, fetchProfile };
+  return { token, profile, isLoggedIn, login, register, logout, fetchProfile, updateProfile, uploadAvatar };
 });

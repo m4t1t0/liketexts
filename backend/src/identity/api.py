@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 from typing import Any, cast
+from uuid import UUID
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, jsonify, request, send_from_directory
 from werkzeug.exceptions import BadRequest
 
 from backend.src.identity.api_auth import get_bearer_user_id
@@ -12,10 +13,15 @@ from backend.src.identity.commands import (
     LoginCommand,
     RefreshTokenCommand,
     RegisterCommand,
+    UpdateProfileCommand,
 )
 from backend.src.shared.service_layer.messagebus import MessageBus
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
+
+# Static file serving for locally stored avatars (no /api prefix, so it
+# stays out of the OpenAPI spec which only covers /api/* and /health*).
+avatar_files_bp = Blueprint("avatar_files", __name__)
 
 
 def get_bus() -> MessageBus:
@@ -130,16 +136,99 @@ def me() -> Response | tuple[Any, ...]:
     command = GetProfileCommand(user_id=UserId(value=user_id))
     user = bus.handle(command)
 
-    return jsonify(
-        {
-            "id": str(user.id),
-            "email": user.email,
-            "display_name": user.display_name,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "avatar_url": user.avatar_url,
-            "created_at": user.created_at.isoformat(),
-            "is_writer": user.is_writer(),
-            "is_reader": user.is_reader(),
-        }
+    return jsonify(_profile_payload(user))
+
+
+def _profile_payload(user: Any) -> dict[str, Any]:
+    """Serialize a User aggregate to the Profile response shape."""
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "display_name": user.display_name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "avatar_url": user.avatar_url,
+        "created_at": user.created_at.isoformat(),
+        "is_writer": user.is_writer(),
+        "is_reader": user.is_reader(),
+    }
+
+
+@auth_bp.route("/me", methods=["PATCH"])
+def update_me() -> Response | tuple[Any, ...]:
+    """Update editable profile fields (first/last name, avatar URL).
+
+    Partial update: only keys present in the JSON body are changed.
+    Send an empty string or null to clear a field.
+    """
+    from backend.src.shared.domain.value_objects import UserId
+
+    user_id = get_bearer_user_id()
+    data = request.get_json() or {}
+    if not isinstance(data, dict):
+        raise BadRequest("JSON object body is required")
+
+    kwargs: dict[str, Any] = {}
+    for field_name in ("first_name", "last_name"):
+        if field_name in data:
+            value = data[field_name]
+            if value is not None and not isinstance(value, str):
+                raise BadRequest(f"{field_name} must be a string or null")
+            text = (value or "").strip()
+            if len(text) > 120:
+                raise BadRequest(f"{field_name} must be at most 120 characters")
+            kwargs[field_name] = text or None
+    if "avatar_url" in data:
+        value = data["avatar_url"]
+        if value is not None and not isinstance(value, str):
+            raise BadRequest("avatar_url must be a string or null")
+        kwargs["avatar_url"] = (value or "").strip() or None
+
+    if not kwargs:
+        raise BadRequest(
+            "No editable fields provided (first_name, last_name, avatar_url)"
+        )
+
+    bus = get_bus()
+    user = bus.handle(UpdateProfileCommand(user_id=UserId(value=user_id), **kwargs))
+    return jsonify(_profile_payload(user))
+
+
+@auth_bp.route("/avatar", methods=["POST"])
+def upload_avatar() -> Response | tuple[Any, ...]:
+    """Upload a profile picture (multipart `file` field: png/jpg/webp/gif).
+
+    Stores the file locally, points the user's `avatar_url` at it, and
+    removes the previous locally stored avatar.
+    """
+    from backend.src.identity.adapters.avatar_storage import (
+        delete_avatar,
+        save_avatar,
     )
+    from backend.src.shared.domain.value_objects import UserId
+
+    user_id = get_bearer_user_id()
+    upload = request.files.get("file")
+    if upload is None or not upload.filename:
+        raise BadRequest("A 'file' multipart field is required")
+
+    bus = get_bus()
+    current = bus.handle(GetProfileCommand(user_id=UserId(value=user_id)))
+    try:
+        avatar_url = save_avatar(UUID(str(current.id)), upload.filename, upload.read())
+    except ValueError as e:
+        raise BadRequest(str(e))
+
+    user = bus.handle(
+        UpdateProfileCommand(user_id=UserId(value=user_id), avatar_url=avatar_url)
+    )
+    delete_avatar(current.avatar_url)
+    return jsonify(_profile_payload(user)), 201
+
+
+@avatar_files_bp.route("/uploads/avatars/<path:filename>", methods=["GET"])
+def serve_avatar(filename: str) -> Response:
+    """Serve a locally stored avatar file."""
+    from backend.src.identity.adapters.avatar_storage import upload_dir
+
+    return send_from_directory(upload_dir(), filename)

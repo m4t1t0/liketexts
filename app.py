@@ -180,12 +180,13 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     app.message_bus = message_bus  # type: ignore[attr-defined]
 
     # Register blueprints
-    from backend.src.identity.api import auth_bp
+    from backend.src.identity.api import auth_bp, avatar_files_bp
     from backend.src.identity.writers_api import writers_bp
     from backend.src.subscriptions.api import subscriptions_bp
     from backend.src.publishing.api import posts_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(avatar_files_bp)
     app.register_blueprint(writers_bp)
     app.register_blueprint(subscriptions_bp)
     app.register_blueprint(posts_bp)
@@ -258,6 +259,7 @@ def _register_handlers(bus: MessageBus) -> None:
         LoginHandler,
         RegisterHandler,
         RefreshTokenHandler,
+        UpdateProfileHandler,
     )
     from backend.src.identity.adapters.sqlalchemy_repository import (
         SqlAlchemyUserRepository,
@@ -312,6 +314,15 @@ def _register_handlers(bus: MessageBus) -> None:
         ).GetProfileCommand,
         _command_handler_with_uow(
             bus, lambda uow, b: GetProfileHandler(SqlAlchemyUserRepository(uow.session))
+        ),
+    )
+    bus.register_command(
+        __import__(
+            "backend.src.identity.commands", fromlist=["UpdateProfileCommand"]
+        ).UpdateProfileCommand,
+        _command_handler_with_uow(
+            bus,
+            lambda uow, b: UpdateProfileHandler(SqlAlchemyUserRepository(uow.session)),
         ),
     )
 

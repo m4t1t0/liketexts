@@ -217,6 +217,115 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Update current user profile
+         * @description Partial update of first/last name and avatar URL. Only present keys are changed; empty string or null clears a field.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated profile. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profile"];
+                    };
+                };
+                /** @description No editable fields or invalid values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Missing, invalid, or expired access token. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/auth/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a profile picture
+         * @description Multipart upload (`file`: png/jpg/jpeg/webp/gif, max 2 MB). Stores the file locally, points `avatar_url` at it, and removes the previous locally stored avatar.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated profile. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profile"];
+                    };
+                };
+                /** @description Missing file, unsupported type, or too large. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Missing, invalid, or expired access token. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -1276,6 +1385,12 @@ export interface components {
             created_at: string;
             is_writer: boolean;
             is_reader: boolean;
+        };
+        /** @description Partial profile update — only present keys are changed. Send an empty string or null to clear a field. */
+        UpdateProfileRequest: {
+            first_name?: string | null;
+            last_name?: string | null;
+            avatar_url?: string | null;
         };
         /** @description Paywall-applied post. `subscriber_content` is null without an active allocation to the writer (or authorship). */
         PostView: {

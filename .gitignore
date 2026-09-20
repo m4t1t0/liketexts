@@ -33,6 +33,9 @@ htmlcov/
 .pytest_cache/
 .tox/
 
+# Uploads (local avatar storage, git-ignored)
+uploads/
+
 # Misc
 .env
 .env.test

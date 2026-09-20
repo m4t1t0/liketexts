@@ -30,6 +30,21 @@ class UserCapabilitiesChanged(DomainEvent):
     removed_roles: list[UserRole]
 
 
+class _UnsetType:
+    """Sentinel for \"field not provided\" in partial updates."""
+
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "UNSET"
+
+
+UNSET = _UnsetType()
+
+# Partial-update field type: UNSET = leave unchanged, None = clear, str = set.
+MaybeStr = Optional[str] | _UnsetType
+
+
 @dataclass
 class Session:
     """Session for refresh token management."""
@@ -111,6 +126,33 @@ class User(AggregateRoot):
             part for part in (self.first_name, self.last_name) if part and part.strip()
         ).strip()
         return full or self.email.split("@")[0]
+
+    def update_profile(
+        self,
+        first_name: MaybeStr = UNSET,
+        last_name: MaybeStr = UNSET,
+        avatar_url: MaybeStr = UNSET,
+    ) -> None:
+        """Update editable profile fields.
+
+        `UNSET` leaves a field unchanged; `None`/blank clears it; a string
+        sets it. Mirrors the partial-update style of post editing.
+        """
+        updated = False
+        if first_name is not UNSET:
+            assert first_name is None or isinstance(first_name, str)
+            self.first_name = (first_name or "").strip() or None
+            updated = True
+        if last_name is not UNSET:
+            assert last_name is None or isinstance(last_name, str)
+            self.last_name = (last_name or "").strip() or None
+            updated = True
+        if avatar_url is not UNSET:
+            assert avatar_url is None or isinstance(avatar_url, str)
+            self.avatar_url = (avatar_url or "").strip() or None
+            updated = True
+        if updated:
+            self.updated_at = datetime.utcnow()
 
     def add_role(self, role: UserRole) -> None:
         """Add a capability/role to the user."""

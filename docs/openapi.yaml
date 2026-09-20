@@ -115,6 +115,80 @@ paths:
                 $ref: '#/components/schemas/Error'
       security:
       - bearerAuth: []
+    patch:
+      summary: Update current user profile
+      tags:
+      - Identity
+      description: Partial update of first/last name and avatar URL. Only present
+        keys are changed; empty string or null clears a field.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: No editable fields or invalid values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing, invalid, or expired access token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /api/v1/auth/avatar:
+    post:
+      summary: Upload a profile picture
+      tags:
+      - Identity
+      description: 'Multipart upload (`file`: png/jpg/jpeg/webp/gif, max 2 MB). Stores
+        the file locally, points `avatar_url` at it, and removes the previous locally
+        stored avatar.'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Missing file, unsupported type, or too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing, invalid, or expired access token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
   /api/v1/writers:
     get:
       summary: Searchable list of public writers
@@ -832,6 +906,14 @@ components:
           type: boolean
         is_reader:
           type: boolean
+    UpdateProfileRequest:
+      type: object
+      description: Partial profile update — only present keys are changed. Send an
+        empty string or null to clear a field.
+      properties:
+        first_name: *id002
+        last_name: *id002
+        avatar_url: *id002
     PostView:
       type: object
       description: Paywall-applied post. `subscriber_content` is null without an active

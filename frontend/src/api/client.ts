@@ -24,6 +24,17 @@ export type WriterPosts = S["WriterPosts"];
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
 const TOKEN_KEY = "paperlet_token";
 
+/**
+ * Resolve an avatar URL to an absolute URL. The backend stores locally
+ * uploaded avatars as relative paths (e.g. `/uploads/avatars/x.png`);
+ * absolute URLs (http(s), local blob:/data: previews) pass through unchanged.
+ */
+export function resolveAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^(https?:\/\/|blob:|data:)/i.test(url)) return url;
+  return `${API_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -66,6 +77,24 @@ async function call<T>(path: string, options: CallOptions = {}): Promise<T> {
   return data as T;
 }
 
+/** POST/PUT a multipart FormData body (no JSON content type). */
+async function callForm<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+  const data: unknown = await res.json().catch(() => null);
+  if (!res.ok) {
+    const body = (data ?? {}) as { code?: string; message?: string; detail?: string };
+    throw new ApiError(res.status, body.message ?? body.detail ?? res.statusText, body.code);
+  }
+  return data as T;
+}
+
 const get = <T>(path: string): Promise<T> => call<T>(path);
 const post = <T>(path: string, body?: unknown): Promise<T> =>
   call<T>(path, { method: "POST", body: body ?? {} });
@@ -87,6 +116,13 @@ export const api = {
   login: (email: string, password: string) =>
     post<TokenPair>("/api/v1/auth/login", { email, password }),
   me: () => get<Profile>("/api/v1/auth/me"),
+  updateProfile: (input: S["UpdateProfileRequest"]) =>
+    patch<Profile>("/api/v1/auth/me", input),
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return callForm<Profile>("/api/v1/auth/avatar", form);
+  },
 
   listWriters: (q = "", limit = 20, offset = 0) =>
     get<WritersList>(

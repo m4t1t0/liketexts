@@ -148,6 +148,14 @@ class Settings:
         default_factory=lambda: _get_env_int("RATE_LIMIT_PER_HOUR", 1000)
     )
 
+    # Profile avatars (local file storage v1; S3-compatible later)
+    avatar_upload_dir: str = field(
+        default_factory=lambda: _get_env("AVATAR_UPLOAD_DIR", "uploads/avatars")
+    )
+    avatar_max_upload_mb: int = field(
+        default_factory=lambda: _get_env_int("AVATAR_MAX_UPLOAD_MB", 2)
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

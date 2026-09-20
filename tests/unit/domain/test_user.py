@@ -87,3 +87,25 @@ class TestUser:
     def test_email_normalization(self) -> None:
         user = User.register("  TEST@EXAMPLE.COM  ", "hash")
         assert user.email == "test@example.com"
+
+    def test_update_profile_sets_and_clears_fields(self) -> None:
+        user = User.register("test@example.com", "hash")
+        user.update_profile(first_name="  Ada ", last_name="Lovelace")
+        assert user.first_name == "Ada"
+        assert user.last_name == "Lovelace"
+        assert user.display_name == "Ada Lovelace"
+        assert user.avatar_url is None  # None arg = unchanged
+
+        user.update_profile(first_name="", avatar_url="https://example.com/a.png")
+        assert user.first_name is None
+        assert user.last_name == "Lovelace"  # unchanged
+        assert user.avatar_url == "https://example.com/a.png"
+
+    def test_sniff_image_kind(self) -> None:
+        from backend.src.identity.adapters.avatar_storage import sniff_image_kind
+
+        assert sniff_image_kind(b"\x89PNG\r\n\x1a\n" + b"\x00" * 10) == "png"
+        assert sniff_image_kind(b"\xff\xd8\xff" + b"\x00" * 10) == "jpeg"
+        assert sniff_image_kind(b"GIF89a" + b"\x00" * 10) == "gif"
+        assert sniff_image_kind(b"RIFF\x00\x00\x00\x00WEBP" + b"\x00") == "webp"
+        assert sniff_image_kind(b"not an image") is None

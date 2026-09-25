@@ -169,6 +169,18 @@ def ui_build(c):
 
 
 @task
+def ui_test(c, unit=False, e2e=False):
+    """Run frontend tests (Vitest unit + Playwright smoke e2e)."""
+    run_unit = unit or not e2e
+    run_e2e = e2e or not unit
+    with c.cd("frontend"):
+        if run_unit:
+            c.run("npm run test:unit")
+        if run_e2e:
+            c.run("npm run test:e2e")
+
+
+@task
 def migrate(c, message=None):
     """Create a new migration."""
     from backend.src.shared.config import get_settings

@@ -23,7 +23,7 @@ describe("auth guard", () => {
   });
 
   it("lets logged-in users through", async () => {
-    localStorage.setItem("paperlet_token", "tok");
+    localStorage.setItem("liketexts_token", "tok");
     await router.push("/reader");
     expect(router.currentRoute.value.name).toBe("reader");
   });

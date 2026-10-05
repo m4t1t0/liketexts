@@ -39,7 +39,7 @@ def _get_database_url() -> str:
     SQLAlchemy 2.1 resolves bare ``postgresql://`` to psycopg (v3); this
     project standardizes on psycopg2, so rewrite the scheme explicitly.
     """
-    url = _get_env("DATABASE_URL", "postgresql://user:password@localhost:5432/paperlet")
+    url = _get_env("DATABASE_URL", "postgresql://user:password@localhost:5432/liketexts")
     if url.startswith("postgresql://"):
         url = "postgresql+psycopg2://" + url[len("postgresql://") :]
     return url
@@ -116,7 +116,7 @@ class Settings:
     )
     email_sender_address: str = field(
         default_factory=lambda: _get_env(
-            "EMAIL_SENDER_ADDRESS", "noreply@paperlet.local"
+            "EMAIL_SENDER_ADDRESS", "noreply@liketexts.local"
         )
     )
 

@@ -1,1 +1,1 @@
-"""Shared kernel for Paperlet platform."""
+"""Shared kernel for Liketexts platform."""

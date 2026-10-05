@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { mount } from "@vue/test-utils";
 import CookieBanner from "./CookieBanner.vue";
 
-const KEY = "paperlet_cookie_consent";
+const KEY = "liketexts_cookie_consent";
 
 function mountBanner() {
   return mount(CookieBanner, {

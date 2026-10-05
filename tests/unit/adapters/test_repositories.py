@@ -1,4 +1,4 @@
-"""Unit adapter tests: repositories + UoW on Postgres paperlet_test (unique data per test)."""
+"""Unit adapter tests: repositories + UoW on Postgres liketexts_test (unique data per test)."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta

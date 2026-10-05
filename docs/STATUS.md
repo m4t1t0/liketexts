@@ -1,4 +1,4 @@
-# Paperlet — Build Status & Session Handoff
+# Liketexts — Build Status & Session Handoff
 
 Source of truth for the product is still `PROMPT.md`; this file tracks **what is
 built, what was deliberately deferred, and what is left**. Last updated after
@@ -13,7 +13,7 @@ built, what was deliberately deferred, and what is left**. Last updated after
   `npm run openapi` inside `frontend/` (from `docs/openapi.yaml`).
 - Spec freshness: `invoke openapi --check` (also enforced by
   `tests/test_openapi.py`).
-- Local services: PostgreSQL DBs `paperlet` / `paperlet_test` (owner `rafa`,
+- Local services: PostgreSQL DBs `liketexts` / `liketexts_test` (owner `rafa`,
   no password over local socket/TCP); Redis on `:6379` (broker db 1, backend
   db 2). `.env` / `.env.test` are git-ignored; `.env.example` is the template.
 

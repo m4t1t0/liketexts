@@ -14,7 +14,7 @@ function logout(): void {
 <template>
   <div class="mx-auto min-h-screen max-w-4xl px-4">
     <header class="flex items-center justify-between border-b border-stone-200 py-4">
-      <RouterLink to="/" class="text-xl font-bold tracking-tight">Paperlet</RouterLink>
+      <RouterLink to="/" class="text-xl font-bold tracking-tight">Liketexts</RouterLink>
       <nav class="flex items-center gap-4 text-sm">
         <RouterLink to="/" class="hover:underline">Catalog</RouterLink>
         <template v-if="auth.isLoggedIn">

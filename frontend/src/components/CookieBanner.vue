@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { RouterLink } from "vue-router";
 
-const KEY = "paperlet_cookie_consent";
+const KEY = "liketexts_cookie_consent";
 
 interface Consent {
   choice: "accepted" | "rejected" | "custom";

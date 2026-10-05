@@ -1,5 +1,5 @@
 /**
- * Typed fetch client for the Paperlet API.
+ * Typed fetch client for the Liketexts API.
  *
  * Response types come from `schema.ts`, generated from `docs/openapi.yaml`
  * (`npm run openapi`). The auth token (localStorage) is attached automatically
@@ -22,7 +22,7 @@ export type CreatedPost = S["CreatedPost"];
 export type WriterPosts = S["WriterPosts"];
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
-const TOKEN_KEY = "paperlet_token";
+const TOKEN_KEY = "liketexts_token";
 
 /**
  * Resolve an avatar URL to an absolute URL. The backend stores locally

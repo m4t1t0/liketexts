@@ -1,4 +1,4 @@
-"""Invoke tasks for Paperlet."""
+"""Invoke tasks for Liketexts."""
 
 from __future__ import annotations
 import os

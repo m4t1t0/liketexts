@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 # Set test environment BEFORE any other fixtures
 os.environ["APP_ENV"] = "test"
-# Prefer explicit TEST_DATABASE_URL, then .env.test, then default paperlet_test.
+# Prefer explicit TEST_DATABASE_URL, then .env.test, then default liketexts_test.
 # (No SQLite fallback — tests run against Postgres per project preference.)
 def _resolve_test_db_url() -> str:
     if os.environ.get("TEST_DATABASE_URL"):
@@ -23,7 +23,7 @@ def _resolve_test_db_url() -> str:
             line = line.strip()
             if line.startswith("DATABASE_URL="):
                 return line.split("=", 1)[1].strip()
-    return "postgresql://rafa@localhost:5432/paperlet_test"
+    return "postgresql://rafa@localhost:5432/liketexts_test"
 
 
 os.environ["DATABASE_URL"] = _resolve_test_db_url()
@@ -43,7 +43,7 @@ os.environ.setdefault("CELERY_BROKER_URL", "redis://localhost:6379/1")
 os.environ.setdefault("CELERY_RESULT_BACKEND", "redis://localhost:6379/2")
 
 
-# Shared test database: Postgres paperlet_test (see .env.test).
+# Shared test database: Postgres liketexts_test (see .env.test).
 # Tables are created once per session; rows are truncated between tests.
 def _get_test_db_url() -> str:
     return os.environ["DATABASE_URL"]

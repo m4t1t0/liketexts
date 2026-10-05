@@ -13,7 +13,7 @@ from backend.src.notifications.service import (
 settings = get_settings()
 
 celery_app = Celery(
-    "paperlet_notifications",
+    "liketexts_notifications",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
 )

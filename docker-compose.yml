@@ -1,4 +1,4 @@
-# Paperlet — local dev stack for Orbstack (Docker Compose).
+# Liketexts — local dev stack for Orbstack (Docker Compose).
 #
 #   docker compose up --build        # api + postgres + redis + celery + frontend
 #   docker compose up --build db redis api   # backend only, no frontend/worker
@@ -12,25 +12,25 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: paperlet-db
+    container_name: liketexts-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: paperlet
-      POSTGRES_PASSWORD: paperlet
-      POSTGRES_DB: paperlet
+      POSTGRES_USER: liketexts
+      POSTGRES_PASSWORD: liketexts
+      POSTGRES_DB: liketexts
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U paperlet -d paperlet"]
+      test: ["CMD-SHELL", "pg_isready -U liketexts -d liketexts"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: paperlet-redis
+    container_name: liketexts-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -44,7 +44,7 @@ services:
 
   api:
     build: .
-    container_name: paperlet-api
+    container_name: liketexts-api
     restart: unless-stopped
     depends_on:
       db:
@@ -60,7 +60,7 @@ services:
       # Docker hostnames override local defaults (old computer used localhost).
       # Values here win over .env only when .env does not set them — compose
       # `environment` takes precedence, so these are the effective defaults.
-      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      DATABASE_URL: postgresql://liketexts:liketexts@db:5432/liketexts
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
@@ -79,7 +79,7 @@ services:
 
   worker:
     build: .
-    container_name: paperlet-worker
+    container_name: liketexts-worker
     restart: unless-stopped
     depends_on:
       db:
@@ -92,7 +92,7 @@ services:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      DATABASE_URL: postgresql://liketexts:liketexts@db:5432/liketexts
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
@@ -103,7 +103,7 @@ services:
 
   beat:
     build: .
-    container_name: paperlet-beat
+    container_name: liketexts-beat
     restart: unless-stopped
     depends_on:
       db:
@@ -114,7 +114,7 @@ services:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      DATABASE_URL: postgresql://liketexts:liketexts@db:5432/liketexts
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
@@ -125,7 +125,7 @@ services:
 
   frontend:
     image: node:22-alpine
-    container_name: paperlet-frontend
+    container_name: liketexts-frontend
     restart: unless-stopped
     depends_on:
       - api

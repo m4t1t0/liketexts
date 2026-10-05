@@ -1,4 +1,4 @@
-"""OpenAPI 3.0 spec builder for the Paperlet API.
+"""OpenAPI 3.0 spec builder for the Liketexts API.
 
 Single source of truth for `docs/openapi.yaml` (see `scripts/generate_openapi.py`
 and `invoke openapi`):
@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-SPEC_TITLE = "Paperlet API"
+SPEC_TITLE = "Liketexts API"
 SPEC_VERSION = "1.0.0"
 OPENAPI_VERSION = "3.0.3"
 

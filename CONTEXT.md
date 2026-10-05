@@ -1,4 +1,4 @@
-# Paperlet
+# Liketexts
 
 Substack-style platform connecting Readers and Writers with a global subscription model, allocation slots, and paywalled content.
 

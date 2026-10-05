@@ -1,4 +1,4 @@
-# Paperlet - Agent Instructions
+# Liketexts - Agent Instructions
 
 Source of truth: `PROMPT.md` (Substack-style platform). This file is aligned to it.
 

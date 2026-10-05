@@ -32,7 +32,6 @@ hypothesis==6.168.4
 pyyaml==6.0.3
 
 # Dev Tools
-invoke==3.0.3
 ruff==0.16.10
 black==26.10.0
 mypy==2.4.0

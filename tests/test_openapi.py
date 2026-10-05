@@ -18,5 +18,5 @@ def test_openapi_yaml_is_current() -> None:
     root = Path(__file__).resolve().parent.parent
     committed = (root / "docs" / "openapi.yaml").read_text()
     assert committed == render_openapi_yaml(spec), (
-        "openapi.yaml is stale — run `invoke openapi` to regenerate."
+        "openapi.yaml is stale — run `make openapi` to regenerate."
     )

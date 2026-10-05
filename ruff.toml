@@ -1,6 +1,6 @@
 # Preserve the historical `ruff check` behavior (ruff <= 0.5 defaults).
 # Without an explicit `select`, newer ruff versions enable additional rules
 # (B, I, UP, PIE, RUF, ...) that flag pre-existing code across the repo.
-# Broadening the rule set is a separate cleanup; see `invoke lint`.
+# Broadening the rule set is a separate cleanup; see `make lint`.
 [lint]
 select = ["E4", "E7", "E9", "F"]

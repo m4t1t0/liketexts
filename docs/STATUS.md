@@ -7,11 +7,11 @@ built, what was deliberately deferred, and what is left**. Last updated after
 
 ## How to run (details in `AGENTS.md`)
 
-- Backend: `invoke start` (fast, no reloader) / `invoke develop` (hot reload),
-  both default to `:5000` (`--port` supported). Tests: `pytest tests`.
-- Frontend: `invoke ui` (dev on `:5173`) / `invoke ui-build`. Types regen:
-  `npm run openapi` inside `frontend/` (from `docs/openapi.yaml`).
-- Spec freshness: `invoke openapi --check` (also enforced by
+- Backend: `make start` (full Docker stack, api on `:5000`).
+  Tests: `make test` (full suite) / `make test T=tests/unit`.
+- Frontend: runs in Compose (`:5173`, see `make ps`). Types regen:
+  `make openapi-client` (node container, no host Node needed).
+- Spec freshness: `make openapi-check` (also enforced by
   `tests/test_openapi.py`).
 - Local services: PostgreSQL DBs `liketexts` / `liketexts_test` (owner `rafa`,
   no password over local socket/TCP); Redis on `:6379` (broker db 1, backend
@@ -76,7 +76,7 @@ public masked feed.
 6. **Cancel-subscription endpoint**: gateway/service support it; no route.
 7. **Frontend tests**: no vitest/Playwright setup yet.
 8. **CI** (no `.github/`): run `pytest`, `ruff`, `mypy backend`,
-   `invoke openapi --check`, and `npm run build` on PRs.
+   `make openapi --check`, and `npm run build` on PRs.
 9. **Production deployment**: WSGI server (Flask dev server only today), static
    SPA hosting, managed Postgres/Redis, secret management.
 10. **Cleanup / tech debt**:

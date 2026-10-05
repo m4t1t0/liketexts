@@ -13,15 +13,15 @@ Build status & handoff: [`docs/STATUS.md`](docs/STATUS.md).
   JWT auth — organized as bounded contexts (Cosmic Python: DDD, Unit of Work,
   Repository, CQRS). See [`docs/adr/`](docs/adr/).
 - **Frontend**: Vue 3 SPA (Vite, Pinia, Router, Tailwind); API types generated
-  from [`docs/openapi.yaml`](docs/openapi.yaml) via `npm run openapi`.
+  from [`docs/openapi.yaml`](docs/openapi.yaml) via `make openapi-client`.
 - **Infra (v1)**: Postgres + Redis only. Payments are mocked, email is a stub
   log, avatars are local files — no Stripe/SMTP/S3 needed.
 
 ## Quickstart (Docker / Orbstack)
 
 ```bash
-cp .env.example .env   # optional: overrides for secrets & non-default config
-docker compose up --build
+make start
+# or: cp .env.example .env && docker compose up --build
 ```
 
 | Service  | URL                   |
@@ -38,26 +38,25 @@ Health: `GET /health`, readiness (db + redis + migrations): `GET /health/ready`.
 
 ## Local dev (no Docker)
 
+Not supported — everything runs in containers. Host needs only Docker + Make:
+
 ```bash
-python -m invoke start      # API on :5000 (no reloader); `develop` for hot reload
-python -m invoke ui         # Vite dev server on :5173
-python -m invoke --list     # all tasks
+make test T=tests/unit  # pytest subset in api
+make lint               # ruff in api
+make help               # all targets
 ```
 
-Needs local Postgres (`liketexts` / `liketexts_test`) + Redis on `:6379`;
-see `.env.example`. Agent instructions: [`AGENTS.md`](AGENTS.md).
+Needs no local Postgres/Redis and no host venv; `.env.example` is the template.
 
 ## Testing
 
 ```bash
-# In Docker (service hostnames):
-docker compose run --rm -e TEST_DATABASE_URL=postgresql://liketexts:liketexts@db:5432/liketexts_test \
-  api python -m pytest tests/ -q
-# Locally: pytest tests/   (uses liketexts_test + localhost Redis)
+make test             # full suite in api (test DB auto-created)
+make test T=tests/unit  # subset
 ```
 
-98 tests (unit + integration + e2e paywall). Also: `invoke lint`,
-`invoke typecheck`, `invoke openapi --check`.
+98 tests (unit + integration + e2e paywall). Also: `make lint`,
+`make typecheck`, `make openapi-check`.
 
 ## Structure
 

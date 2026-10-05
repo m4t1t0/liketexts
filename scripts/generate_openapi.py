@@ -39,7 +39,7 @@ def main() -> int:
     rendered = render_openapi_yaml(build_openapi_spec())
     if args.check:
         if not args.output.exists() or args.output.read_text() != rendered:
-            print(f"{args.output} is stale — run `invoke openapi` to regenerate.")
+            print(f"{args.output} is stale — run `make openapi` to regenerate.")
             return 1
         print(f"{args.output} is current.")
         return 0

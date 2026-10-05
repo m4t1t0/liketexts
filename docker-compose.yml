@@ -1,0 +1,147 @@
+# Paperlet — local dev stack for Orbstack (Docker Compose).
+#
+#   docker compose up --build        # api + postgres + redis + celery + frontend
+#   docker compose up --build db redis api   # backend only, no frontend/worker
+#
+# Infra needed: Postgres + Redis only.
+#  - Payments are mocked (PAYMENT_GATEWAY=mock, see backend/src/adapters/payments.py)
+#  - Email is a stub log (no SMTP/Mailchimp in v1)
+#  - Avatars are local files under ./uploads (bind-mounted into api/worker)
+# No other infra pieces (no S3, no SMTP, no Stripe) are required for v1.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: paperlet-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: paperlet
+      POSTGRES_PASSWORD: paperlet
+      POSTGRES_DB: paperlet
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperlet -d paperlet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: paperlet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    container_name: paperlet-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Docker hostnames override local defaults (old computer used localhost).
+      # Values here win over .env only when .env does not set them — compose
+      # `environment` takes precedence, so these are the effective defaults.
+      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PORT: "5000"
+    volumes:
+      # Live code + persistent avatar uploads
+      - .:/app
+      - uploads:/app/uploads
+    command: sh -c "alembic upgrade head && python app.py"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  worker:
+    build: .
+    container_name: paperlet-worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+    command: celery -A backend.src.notifications.tasks.celery_app worker --concurrency=4 --loglevel=info
+
+  beat:
+    build: .
+    container_name: paperlet-beat
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://paperlet:paperlet@db:5432/paperlet
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    volumes:
+      - .:/app
+      - celerybeat:/app/beatdata
+    command: celery -A backend.src.notifications.tasks.celery_app beat --loglevel=info --schedule /app/beatdata/celerybeat-schedule
+
+  frontend:
+    image: node:22-alpine
+    container_name: paperlet-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    environment:
+      # Browser calls the API directly, so this must be reachable from the host.
+      VITE_API_URL: http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+  celerybeat:

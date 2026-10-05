@@ -196,13 +196,13 @@ class User(AggregateRoot):
 
     def verify_password(self, password: str) -> bool:
         """Verify password against hash."""
-        from passlib.hash import bcrypt
+        from backend.src.identity.passwords import verify_password
 
-        return bcrypt.verify(password, self.password_hash)
+        return verify_password(password, self.password_hash)
 
     @staticmethod
     def hash_password(password: str) -> str:
         """Hash a password."""
-        from passlib.hash import bcrypt
+        from backend.src.identity.passwords import hash_password
 
-        return bcrypt.hash(password)
+        return hash_password(password)

@@ -6,7 +6,8 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 import jwt
-from passlib.hash import bcrypt
+
+from backend.src.identity.passwords import hash_password, verify_password
 
 from backend.src.shared.config import get_settings
 from backend.src.identity.domain.model import User, Session
@@ -151,7 +152,7 @@ class AuthService:
 
         session_id = uuid4()
         refresh_token = self._jwt.create_refresh_token(user.id, session_id)
-        refresh_token_hash = bcrypt.hash(refresh_token)
+        refresh_token_hash = hash_password(refresh_token)
         expires_at = datetime.now(timezone.utc) + timedelta(
             days=self._settings.jwt_refresh_token_expire_days
         )
@@ -189,7 +190,7 @@ class AuthService:
         session = self._session_repo.get(session_id)
         if not session or not session.is_valid():
             raise ValueError("Session invalid or expired")
-        if not bcrypt.verify(refresh_token, session.refresh_token_hash):
+        if not verify_password(refresh_token, session.refresh_token_hash):
             # Token theft detected - revoke session
             session.revoke()
             raise ValueError("Invalid refresh token")
@@ -198,7 +199,7 @@ class AuthService:
         session.revoke()
         new_session_id = uuid4()
         new_refresh_token = self._jwt.create_refresh_token(user.id, new_session_id)
-        new_refresh_token_hash = bcrypt.hash(new_refresh_token)
+        new_refresh_token_hash = hash_password(new_refresh_token)
         new_expires_at = datetime.now(timezone.utc) + timedelta(
             days=self._settings.jwt_refresh_token_expire_days
         )

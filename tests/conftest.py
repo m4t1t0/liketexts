@@ -27,18 +27,20 @@ def _resolve_test_db_url() -> str:
 
 
 os.environ["DATABASE_URL"] = _resolve_test_db_url()
-os.environ["REDIS_URL"] = "redis://localhost:6379/0"
-os.environ["SECRET_KEY"] = "test-secret-key"
-os.environ["JWT_ALGORITHM"] = "HS256"
-os.environ["JWT_ACCESS_TOKEN_EXPIRE_MINUTES"] = "15"
-os.environ["JWT_REFRESH_TOKEN_EXPIRE_DAYS"] = "30"
-os.environ["SUBSCRIPTION_MONTHLY_PRICE_EUR"] = "9.95"
-os.environ["ALLOCATION_SLOTS_PER_SUBSCRIPTION"] = "5"
-os.environ["CHANGE_CREDITS_PER_BILLING_CYCLE"] = "2"
-os.environ["EMAIL_BATCH_SIZE"] = "100"
-os.environ["PAYMENT_GATEWAY"] = "mock"
-os.environ["CELERY_BROKER_URL"] = "redis://localhost:6379/1"
-os.environ["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/2"
+# setdefault (not assignment): local runs fall back to localhost, while Docker
+# runs inject service hostnames (db/redis) via the environment.
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("JWT_ALGORITHM", "HS256")
+os.environ.setdefault("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "15")
+os.environ.setdefault("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "30")
+os.environ.setdefault("SUBSCRIPTION_MONTHLY_PRICE_EUR", "9.95")
+os.environ.setdefault("ALLOCATION_SLOTS_PER_SUBSCRIPTION", "5")
+os.environ.setdefault("CHANGE_CREDITS_PER_BILLING_CYCLE", "2")
+os.environ.setdefault("EMAIL_BATCH_SIZE", "100")
+os.environ.setdefault("PAYMENT_GATEWAY", "mock")
+os.environ.setdefault("CELERY_BROKER_URL", "redis://localhost:6379/1")
+os.environ.setdefault("CELERY_RESULT_BACKEND", "redis://localhost:6379/2")
 
 
 # Shared test database: Postgres paperlet_test (see .env.test).

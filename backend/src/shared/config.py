@@ -33,6 +33,18 @@ def _get_env_int(key: str, default: int) -> int:
         return default
 
 
+def _get_database_url() -> str:
+    """Get DATABASE_URL, pinning bare ``postgresql://`` to the psycopg2 driver.
+
+    SQLAlchemy 2.1 resolves bare ``postgresql://`` to psycopg (v3); this
+    project standardizes on psycopg2, so rewrite the scheme explicitly.
+    """
+    url = _get_env("DATABASE_URL", "postgresql://user:password@localhost:5432/paperlet")
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://") :]
+    return url
+
+
 def _get_env_float(key: str, default: float) -> float:
     """Get environment variable as float with default."""
     try:
@@ -56,11 +68,7 @@ class Settings:
     api_prefix: str = field(default_factory=lambda: _get_env("API_PREFIX", "/api/v1"))
 
     # Database
-    database_url: str = field(
-        default_factory=lambda: _get_env(
-            "DATABASE_URL", "postgresql://user:password@localhost:5432/paperlet"
-        )
-    )
+    database_url: str = field(default_factory=_get_database_url)
     database_pool_size: int = field(
         default_factory=lambda: _get_env_int("DATABASE_POOL_SIZE", 10)
     )

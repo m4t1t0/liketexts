@@ -74,20 +74,29 @@ public masked feed.
 4. **Feed pagination UI**: cursor pagination is API-ready; UI loads a fixed 20.
 5. **Catalog search box**: API `q` param exists; home view doesn't expose it.
 6. **Cancel-subscription endpoint**: gateway/service support it; no route.
+6b. **Fixed (was unreported)**: the Celery Beat container ran with an empty
+   schedule — `process_scheduled_posts` was never invoked, so scheduled posts
+   never auto-published. A `beat_schedule` entry (every 60s) now exists in
+   `backend/src/notifications/tasks.py`.
 7. **Frontend tests**: no vitest/Playwright setup yet.
 8. **CI** (no `.github/`): run `pytest`, `ruff`, `mypy backend`,
    `make openapi --check`, and `npm run build` on PRs.
 9. **Production deployment**: WSGI server (Flask dev server only today), static
    SPA hosting, managed Postgres/Redis, secret management.
-10. **Cleanup / tech debt**:
-    - `backend/src/identity/adapters/repository.py` is a dead duplicate of
-      `sqlalchemy_repository.py` (zero importers) — delete it.
+10. **Cleanup / tech debt** (resolved in the code-review pass: deleted dead
+    `identity/adapters/repository.py` duplicate; shared `get_bus`/`parse_uuid`/
+    `as_status_str` helpers replace copy-paste across API modules; subscription
+    repo exposes `session` publicly instead of a handler poking `_session`;
+    dead `MAX_SLOTS`/`CREDITS_PER_CYCLE`, `LoggingEmailSender`, and
+    `read_model.add_follower` removed; `assert` validation in
+    `identity/domain/model.py` replaced with `ValueError`):
     - `backend/tests/{unit,integration,e2e}/` are empty stale dirs — remove.
     - `SubscriptionStatusProjection` likely never fires (subscription command
       handlers mutate without publishing via the bus).
     - `publish`/`schedule`/`cancel`/`update` post endpoints return 500 (not
       404/403) for missing or foreign posts — `get_post` already maps to 404,
-      extend the pattern.
+      extend the pattern. (`assign`/`subscribe` 500-on-ValueError fixed;
+      they now map to 400.)
     - Writers catalog filters in memory (`list()` + `is_writer()`); fine now,
       revisit with real user volume.
 

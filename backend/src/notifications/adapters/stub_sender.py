@@ -46,8 +46,3 @@ class StubEmailSender:
             )
         return results
 
-
-class LoggingEmailSender(StubEmailSender):
-    """Alias for clarity."""
-
-    pass

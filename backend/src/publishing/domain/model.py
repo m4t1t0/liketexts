@@ -8,6 +8,7 @@ from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from backend.src.shared.domain.events import AggregateRoot, DomainEvent
+from backend.src.shared.domain.value_objects import as_status_str
 
 
 class PostStatus(str, Enum):
@@ -192,9 +193,7 @@ class Post(AggregateRoot):
     ) -> dict:
         """Get post content based on reader's allocation status."""
         # Handle both enum and string status (from DB)
-        status_value = (
-            self.status.value if hasattr(self.status, "value") else self.status
-        )
+        status_value = as_status_str(self.status)
         # Writers can see their own subscriber content
         is_writer = reader_id is not None and reader_id == self.writer_id
         content: dict[str, Any] = {

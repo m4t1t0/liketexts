@@ -20,6 +20,7 @@ from backend.src.identity.domain.repository import UserRepository
 from backend.src.identity.domain.model import UserRole
 from backend.src.shared.domain.events import EventPublisher
 from backend.src.subscriptions.adapters.repository import SubscriptionRepository
+from backend.src.shared.domain.value_objects import as_status_str
 from backend.src.shared.service_layer.messagebus import CommandHandler
 
 
@@ -143,11 +144,7 @@ class PublishingService:
         if command.reader_id:
             subscription = self._subscription_repo.get_by_reader(command.reader_id.value)
             if subscription:
-                sub_status = (
-                    subscription.status.value
-                    if hasattr(subscription.status, "value")
-                    else subscription.status
-                )
+                sub_status = as_status_str(subscription.status)
                 if sub_status == "active":
                     has_allocation = subscription.is_writer_allocated(post.writer_id)
 
@@ -168,11 +165,7 @@ class PublishingService:
         subscription = self._subscription_repo.get_by_reader(command.reader_id.value)
         if not subscription:
             return {"posts": [], "next_cursor": None}
-        sub_status = (
-            subscription.status.value
-            if hasattr(subscription.status, "value")
-            else subscription.status
-        )
+        sub_status = as_status_str(subscription.status)
         if sub_status != "active":
             return {"posts": [], "next_cursor": None}
 

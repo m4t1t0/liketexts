@@ -28,11 +28,15 @@ def _persist_allocation_log(subscription_repo, subscription: Subscription) -> No
     handlers mutate aggregates without publishing via the bus in v1.
     """
     from backend.src.subscriptions.adapters.read_model import AllocationLogProjection
+    from backend.src.subscriptions.adapters.sqlalchemy_repository import (
+        SqlAlchemySubscriptionRepository,
+    )
 
-    session = getattr(subscription_repo, "_session", None)
-    if session is None:
+    # allocation_log is a SQLAlchemy projection; other repo kinds (if any) have
+    # no row to write.
+    if not isinstance(subscription_repo, SqlAlchemySubscriptionRepository):
         return
-    projector = AllocationLogProjection(session)
+    projector = AllocationLogProjection(subscription_repo.session)
     for event in subscription.events:
         if isinstance(event, AllocationChanged):
             projector.handle(event)

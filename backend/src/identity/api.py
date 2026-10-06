@@ -1,12 +1,13 @@
 """Identity API routes."""
 
 from __future__ import annotations
-from typing import Any, cast
+from typing import Any
 from uuid import UUID
 
 from flask import Blueprint, Response, jsonify, request, send_from_directory
 from werkzeug.exceptions import BadRequest
 
+from backend.src.shared.api import get_bus
 from backend.src.identity.api_auth import get_bearer_user_id
 from backend.src.identity.commands import (
     GetProfileCommand,
@@ -15,20 +16,12 @@ from backend.src.identity.commands import (
     RegisterCommand,
     UpdateProfileCommand,
 )
-from backend.src.shared.service_layer.messagebus import MessageBus
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
 
 # Static file serving for locally stored avatars (no /api prefix, so it
 # stays out of the OpenAPI spec which only covers /api/* and /health*).
 avatar_files_bp = Blueprint("avatar_files", __name__)
-
-
-def get_bus() -> MessageBus:
-    """Get message bus from app context."""
-    from flask import current_app
-
-    return cast(MessageBus, getattr(current_app, "message_bus"))
 
 
 @auth_bp.route("/register", methods=["POST"])

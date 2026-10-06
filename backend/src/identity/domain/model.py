@@ -140,15 +140,18 @@ class User(AggregateRoot):
         """
         updated = False
         if first_name is not UNSET:
-            assert first_name is None or isinstance(first_name, str)
+            if first_name is not None and not isinstance(first_name, str):
+                raise ValueError("first_name must be a string or None")
             self.first_name = (first_name or "").strip() or None
             updated = True
         if last_name is not UNSET:
-            assert last_name is None or isinstance(last_name, str)
+            if last_name is not None and not isinstance(last_name, str):
+                raise ValueError("last_name must be a string or None")
             self.last_name = (last_name or "").strip() or None
             updated = True
         if avatar_url is not UNSET:
-            assert avatar_url is None or isinstance(avatar_url, str)
+            if avatar_url is not None and not isinstance(avatar_url, str):
+                raise ValueError("avatar_url must be a string or None")
             self.avatar_url = (avatar_url or "").strip() or None
             updated = True
         if updated:

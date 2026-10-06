@@ -1,11 +1,10 @@
 """Publishing API routes."""
 
 from __future__ import annotations
-from typing import Any, cast
+from typing import Any
 
 from flask import Blueprint, Response, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
-from uuid import UUID
 
 from backend.src.identity.api_auth import (
     get_current_reader,
@@ -13,8 +12,9 @@ from backend.src.identity.api_auth import (
     get_current_writer,
     get_optional_reader,
 )
+from backend.src.shared.api import get_bus, parse_uuid
 from backend.src.shared.domain.value_objects import PostId, ReaderId, WriterId
-from backend.src.shared.service_layer.messagebus import MessageBus
+
 from backend.src.publishing.commands import (
     CancelPostCommand,
     CreatePostCommand,
@@ -29,13 +29,6 @@ from backend.src.publishing.commands import (
 )
 
 posts_bp = Blueprint("posts", __name__, url_prefix="/api/v1/posts")
-
-
-def get_bus() -> MessageBus:
-    """Get message bus from app context."""
-    from flask import current_app
-
-    return cast(MessageBus, getattr(current_app, "message_bus"))
 
 
 @posts_bp.route("", methods=["POST"])
@@ -104,10 +97,7 @@ def publish_post(post_id: str) -> Response | tuple[Any, ...]:
     """Publish a post immediately."""
     writer = get_current_writer()
 
-    try:
-        post_uuid = UUID(post_id)
-    except ValueError:
-        raise BadRequest("Invalid post_id format")
+    post_uuid = parse_uuid(post_id, "post_id")
 
     command = PublishPostCommand(writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid))
     bus = get_bus()
@@ -142,10 +132,7 @@ def schedule_post(post_id: str) -> Response | tuple[Any, ...]:
     except ValueError:
         raise BadRequest("Invalid scheduled_at format, use ISO 8601")
 
-    try:
-        post_uuid = UUID(post_id)
-    except ValueError:
-        raise BadRequest("Invalid post_id format")
+    post_uuid = parse_uuid(post_id, "post_id")
 
     command = SchedulePostCommand(
         writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid), scheduled_for=scheduled_for
@@ -170,10 +157,7 @@ def cancel_post(post_id: str) -> Response | tuple[Any, ...]:
     """Cancel a scheduled post."""
     writer = get_current_writer()
 
-    try:
-        post_uuid = UUID(post_id)
-    except ValueError:
-        raise BadRequest("Invalid post_id format")
+    post_uuid = parse_uuid(post_id, "post_id")
 
     command = CancelPostCommand(writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid))
     bus = get_bus()
@@ -194,10 +178,7 @@ def update_post(post_id: str) -> Response | tuple[Any, ...]:
     writer = get_current_writer()
     data = request.get_json() or {}
 
-    try:
-        post_uuid = UUID(post_id)
-    except ValueError:
-        raise BadRequest("Invalid post_id format")
+    post_uuid = parse_uuid(post_id, "post_id")
 
     command = UpdatePostCommand(
         writer_id=WriterId(value=writer["id"]),
@@ -224,10 +205,7 @@ def get_post(post_id: str) -> Response | tuple[Any, ...]:
     """Get a single post with paywall logic (public preview, no auth required)."""
     reader = get_optional_reader()
 
-    try:
-        post_uuid = UUID(post_id)
-    except ValueError:
-        raise BadRequest("Invalid post_id format")
+    post_uuid = parse_uuid(post_id, "post_id")
 
     command = GetPostCommand(
         post_id=PostId(value=post_uuid),

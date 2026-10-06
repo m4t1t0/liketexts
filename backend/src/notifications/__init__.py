@@ -7,7 +7,6 @@ from backend.src.notifications.adapters.email import (
     SendResult,
 )
 from backend.src.notifications.adapters.stub_sender import (
-    LoggingEmailSender,
     StubEmailSender,
 )
 from backend.src.notifications.domain.model import EmailBatch
@@ -24,7 +23,6 @@ __all__ = [
     "NotificationSender",
     "SendResult",
     "StubEmailSender",
-    "LoggingEmailSender",
     "EmailBatch",
     "NotificationService",
     "celery_app",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
-from typing import Generic, TypeVar, TYPE_CHECKING
+from typing import Any, Generic, TypeVar, TYPE_CHECKING
 
 if TYPE_CHECKING:
     # Quoted forward refs for the `EntityId["..."]` bases below (mypy-only).
@@ -96,3 +96,12 @@ class Money:
 
     def __str__(self) -> str:
         return f"{self.eur:.2f} {self.currency}"
+
+
+def as_status_str(status: Any) -> str:
+    """Coerce an enum-or-string status to its plain string value.
+
+    Aggregates may carry either a Python enum (in-process) or a plain string
+    (loaded from the DB via imperative mapping); the read side wants the string.
+    """
+    return status.value if hasattr(status, "value") else status

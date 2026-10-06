@@ -16,6 +16,11 @@ class SqlAlchemySubscriptionRepository(SubscriptionRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
+    @property
+    def session(self) -> Session:
+        """Raw session, exposed for projections that write alongside the repo."""
+        return self._session
+
     def add(self, subscription: Subscription) -> None:
         self._session.add(subscription)
 

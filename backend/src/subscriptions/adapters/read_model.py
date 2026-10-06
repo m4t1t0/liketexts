@@ -296,13 +296,6 @@ def get_followers_without_allocation(session: Session, writer_id: UUID) -> list[
     return result
 
 
-def add_follower(session: Session, writer_id: UUID, reader_id: UUID) -> None:
-    """Add a follower (when user follows a writer without allocation)."""
-    from datetime import datetime
-
-    _insert_follower_ignore(session, writer_id, reader_id, datetime.utcnow())
-
-
 def remove_follower(session: Session, writer_id: UUID, reader_id: UUID) -> None:
     """Remove a follower."""
     session.execute(

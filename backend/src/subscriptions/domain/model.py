@@ -8,6 +8,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from backend.src.shared.domain.events import AggregateRoot, DomainEvent
+from backend.src.shared.domain.value_objects import as_status_str
 from backend.src.shared.config import get_settings
 
 
@@ -80,11 +81,6 @@ class BillingCycleRenewed(DomainEvent):
 
 class Subscription(AggregateRoot):
     """Subscription aggregate - owns allocation slots and change credits."""
-
-    # Kept for backwards-compat / tests; authoritative values live in Settings
-    # (allocation_slots_per_subscription, change_credits_per_billing_cycle).
-    MAX_SLOTS: int = 5
-    CREDITS_PER_CYCLE: int = 2
 
     def __init__(
         self,
@@ -333,9 +329,7 @@ class Subscription(AggregateRoot):
     def get_allocation_summary(self) -> dict:
         """Get summary for API response."""
         # Handle both enum and string status (from DB)
-        status_value = (
-            self.status.value if hasattr(self.status, "value") else self.status
-        )
+        status_value = as_status_str(self.status)
         settings = get_settings()
         return {
             "subscription_id": str(self.id),

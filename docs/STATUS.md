@@ -62,43 +62,49 @@ public masked feed.
 - Real email provider (stub log v1, ADR-0004); Stripe integration (mock
   gateway, ADR-0002); writer payouts (counts only, ADR-0003).
 
+## Resolved (this pass)
+
+- **Scheduled posts never auto-published** (was unreported): the Celery Beat
+  container ran with an empty schedule. A `beat_schedule` entry (every 60s)
+  now exists in `backend/src/notifications/tasks.py`.
+- **Follow writers** (`PROMPT.md` line 74): `POST/DELETE
+  /api/v1/writers/{id}/follow` with `is_following` on the writer detail;
+  preview emails now reach "all non-subscribed followers".
+- **Subscriber count metric** (`PROMPT.md` line 116): `GET /posts/writer`
+  returns `subscriber_count`; `WriterSubscribersProjection` now also runs in
+  the command-handler direct-persistence path (projections were bus-wired
+  only, and subscription handlers don't publish via the bus).
+- **Post editing UI**: inline editor in `WriterView.vue` via `PATCH /posts/{id}`.
+- **Feed pagination UI**: "Load more" in `ReaderView.vue` (existing cursor API).
+- **Catalog search box**: debounced search in `HomeView.vue` calling
+  `GET /api/v1/writers?q=` (server-side; replaces client filtering).
+- **Post endpoints 404/403**: `publish/schedule/cancel/update` now map domain
+  errors (not found / not authorized) instead of returning 500.
+- Code-review standards pass: deleted dead `identity/adapters/repository.py`
+  duplicate; shared `get_bus`/`parse_uuid`/`as_status_str` helpers replace
+  copy-paste across API modules; subscription repo exposes `session` publicly
+  instead of a handler poking `_session`; dead `MAX_SLOTS`/`CREDITS_PER_CYCLE`,
+  `LoggingEmailSender`, and `read_model.add_follower` removed; `assert`
+  validation replaced with `ValueError`.
+
 ## Left to do (roughly ordered by value)
 
 1. **SPA token refresh**: the client never calls `POST /auth/refresh`, so users
    are effectively logged out when the 15 min access token expires. Add silent
    refresh + retry on 401.
-2. **Writer subscriber counts**: `PROMPT.md` requires them on the writer
-   dashboard; the API exposes post counts but no per-writer subscriber metric
-   in the UI (data exists in `writer_subscribers`).
-3. **Post editing UI**: `PATCH /posts/{id}` exists, no editor UI for it.
-4. **Feed pagination UI**: cursor pagination is API-ready; UI loads a fixed 20.
-5. **Catalog search box**: API `q` param exists; home view doesn't expose it.
-6. **Cancel-subscription endpoint**: gateway/service support it; no route.
-6b. **Fixed (was unreported)**: the Celery Beat container ran with an empty
-   schedule — `process_scheduled_posts` was never invoked, so scheduled posts
-   never auto-published. A `beat_schedule` entry (every 60s) now exists in
-   `backend/src/notifications/tasks.py`.
-7. **Frontend tests**: no vitest/Playwright setup yet.
-8. **CI** (no `.github/`): run `pytest`, `ruff`, `mypy backend`,
+2. **Cancel-subscription endpoint**: gateway/service support it; no route.
+3. **Rich Markdown editor**: `PROMPT.md` line 115 — split preview/subscriber
+   fields exist, but they are plain textareas (labels mention Markdown). A
+   real editor component (e.g. CodeMirror/Tiptap) is deferred.
+4. **Frontend tests**: no vitest/Playwright setup yet.
+5. **CI** (no `.github/`): run `pytest`, `ruff`, `mypy backend`,
    `make openapi --check`, and `npm run build` on PRs.
-9. **Production deployment**: WSGI server (Flask dev server only today), static
+6. **Production deployment**: WSGI server (Flask dev server only today), static
    SPA hosting, managed Postgres/Redis, secret management.
-10. **Cleanup / tech debt** (resolved in the code-review pass: deleted dead
-    `identity/adapters/repository.py` duplicate; shared `get_bus`/`parse_uuid`/
-    `as_status_str` helpers replace copy-paste across API modules; subscription
-    repo exposes `session` publicly instead of a handler poking `_session`;
-    dead `MAX_SLOTS`/`CREDITS_PER_CYCLE`, `LoggingEmailSender`, and
-    `read_model.add_follower` removed; `assert` validation in
-    `identity/domain/model.py` replaced with `ValueError`):
-    - `backend/tests/{unit,integration,e2e}/` are empty stale dirs — remove.
-    - `SubscriptionStatusProjection` likely never fires (subscription command
-      handlers mutate without publishing via the bus).
-    - `publish`/`schedule`/`cancel`/`update` post endpoints return 500 (not
-      404/403) for missing or foreign posts — `get_post` already maps to 404,
-      extend the pattern. (`assign`/`subscribe` 500-on-ValueError fixed;
-      they now map to 400.)
-    - Writers catalog filters in memory (`list()` + `is_writer()`); fine now,
-      revisit with real user volume.
+7. **Cleanup / tech debt**:
+   - `backend/tests/{unit,integration,e2e}/` are empty stale dirs — remove.
+   - Writers catalog filters in memory (`list()` + `is_writer()`); fine now,
+     revisit with real user volume.
 
 ## Doc map
 

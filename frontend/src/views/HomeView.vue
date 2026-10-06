@@ -17,11 +17,24 @@ const catalog = ref<WritersList | null>(null);
 const query = ref("");
 const error = ref("");
 
-const writers = computed(() => {
-  const q = query.value.trim().toLowerCase();
-  const all = catalog.value?.writers ?? [];
-  return q ? all.filter((w) => w.display_name.toLowerCase().includes(q)) : all;
-});
+const writers = computed(() => catalog.value?.writers ?? []);
+
+// Server-side search (GET /writers?q=), debounced.
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+function onSearchInput(): void {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    void search();
+  }, 300);
+}
+
+async function search(): Promise<void> {
+  try {
+    catalog.value = await api.listWriters(query.value.trim(), 50);
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : "Search failed";
+  }
+}
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -121,6 +134,13 @@ const navItems = [
 
       <section id="writers" class="mt-12 scroll-mt-6">
         <h2 class="mb-3 text-xl font-bold">Explore writers</h2>
+        <input
+          v-model="query"
+          type="search"
+          placeholder="Search writers…"
+          class="mb-3 w-full max-w-sm rounded border border-stone-300 px-3 py-2 text-sm"
+          @input="onSearchInput"
+        />
         <ul class="grid gap-2 sm:grid-cols-2">
           <li
             v-for="w in writers"

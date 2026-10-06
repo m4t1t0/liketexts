@@ -22,24 +22,31 @@ from backend.src.subscriptions.service import SubscriptionService
 
 
 def _persist_allocation_log(subscription_repo, subscription: Subscription) -> None:
-    """Write pending AllocationChanged events to allocation_log table.
+    """Write pending AllocationChanged events to the read models directly.
 
-    Direct persistence (in addition to event-bus projection) because command
-    handlers mutate aggregates without publishing via the bus in v1.
+    Direct persistence (in addition to the event-bus projections) because
+    subscription command handlers mutate aggregates without publishing via the
+    bus in v1. Runs AllocationLogProjection (audit) AND
+    WriterSubscribersProjection (dashboard metrics, subscriber emails).
     """
-    from backend.src.subscriptions.adapters.read_model import AllocationLogProjection
+    from backend.src.subscriptions.adapters.read_model import (
+        AllocationLogProjection,
+        WriterSubscribersProjection,
+    )
     from backend.src.subscriptions.adapters.sqlalchemy_repository import (
         SqlAlchemySubscriptionRepository,
     )
 
-    # allocation_log is a SQLAlchemy projection; other repo kinds (if any) have
-    # no row to write.
+    # Projections are SQLAlchemy-backed; other repo kinds (if any) have no rows.
     if not isinstance(subscription_repo, SqlAlchemySubscriptionRepository):
         return
-    projector = AllocationLogProjection(subscription_repo.session)
+    session = subscription_repo.session
+    log_projection = AllocationLogProjection(session)
+    subscribers_projection = WriterSubscribersProjection(session)
     for event in subscription.events:
         if isinstance(event, AllocationChanged):
-            projector.handle(event)
+            log_projection.handle(event)
+            subscribers_projection.handle(event)
 
 
 def _ensure_reader(user_repo: UserRepository, user_id: UUID) -> None:

@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from flask import Blueprint, Response, jsonify, request
-from uuid import UUID
 from werkzeug.exceptions import BadRequest, NotFound
 
-from backend.src.identity.api_auth import get_optional_reader_id
+from backend.src.identity.api_auth import get_current_user, get_optional_reader_id
+from backend.src.shared.api import parse_uuid
 from backend.src.shared.domain.value_objects import as_status_str
 
 writers_bp = Blueprint("writers", __name__, url_prefix="/api/v1/writers")
@@ -57,10 +57,7 @@ def list_writers() -> Response | tuple[Any, ...]:
 @writers_bp.route("/<writer_id>", methods=["GET"])
 def get_writer(writer_id: str) -> Response | tuple[Any, ...]:
     """Writer profile & past newsletters (paywall-masked for non-subscribers)."""
-    try:
-        writer_uuid = UUID(writer_id)
-    except ValueError:
-        raise BadRequest("Invalid writer_id format")
+    writer_uuid = parse_uuid(writer_id, "writer_id")
 
     from backend.src.identity.adapters.sqlalchemy_repository import (
         SqlAlchemyUserRepository,
@@ -86,13 +83,17 @@ def get_writer(writer_id: str) -> Response | tuple[Any, ...]:
         posts = post_repo.get_by_writer(writer_uuid, PostStatus.PUBLISHED)
 
         has_allocation = False
+        is_following_writer = False
         if reader_id:
+            from backend.src.subscriptions.adapters.read_model import is_following
+
             sub_repo = SqlAlchemySubscriptionRepository(uow.session)
             subscription = sub_repo.get_by_reader(reader_id)
             if subscription:
                 status = as_status_str(subscription.status)
                 if status == "active":
                     has_allocation = subscription.is_writer_allocated(writer_uuid)
+            is_following_writer = is_following(uow.session, writer_uuid, reader_id)
 
         post_data = [
             {
@@ -111,6 +112,56 @@ def get_writer(writer_id: str) -> Response | tuple[Any, ...]:
             "avatar_url": writer.avatar_url,
             "created_at": writer.created_at.isoformat(),
             "subscriber_post_count": len(post_data),
+            "is_following": is_following_writer,
             "posts": post_data,
         }
     return jsonify(result)
+
+
+@writers_bp.route("/<writer_id>/follow", methods=["POST"])
+def follow_writer(writer_id: str) -> Response | tuple[Any, ...]:
+    """Follow a writer (preview emails, no allocation slot)."""
+    from datetime import datetime
+
+    from backend.src.identity.adapters.sqlalchemy_repository import (
+        SqlAlchemyUserRepository,
+    )
+    from backend.src.shared.adapters.unit_of_work import SqlAlchemyUnitOfWork
+    from backend.src.subscriptions.adapters.read_model import (
+        _insert_follower_ignore,
+    )
+
+    reader = get_current_user()
+    writer_uuid = parse_uuid(writer_id, "writer_id")
+    reader_id = parse_uuid(str(reader["id"]), "reader_id")
+    if reader_id == writer_uuid:
+        raise BadRequest("Cannot follow yourself")
+
+    with SqlAlchemyUnitOfWork() as uow:
+        writer = SqlAlchemyUserRepository(uow.session).get(writer_uuid)
+        if not writer or not writer.is_writer():
+            raise NotFound("Writer not found")
+        _insert_follower_ignore(uow.session, writer_uuid, reader_id, datetime.utcnow())
+        uow.commit()
+    return jsonify({"following": True}), 201
+
+
+@writers_bp.route("/<writer_id>/follow", methods=["DELETE"])
+def unfollow_writer(writer_id: str) -> Response | tuple[Any, ...]:
+    """Stop following a writer."""
+    from backend.src.identity.adapters.sqlalchemy_repository import (
+        SqlAlchemyUserRepository,
+    )
+    from backend.src.shared.adapters.unit_of_work import SqlAlchemyUnitOfWork
+    from backend.src.subscriptions.adapters.read_model import remove_follower
+
+    reader = get_current_user()
+    writer_uuid = parse_uuid(writer_id, "writer_id")
+
+    with SqlAlchemyUnitOfWork() as uow:
+        writer = SqlAlchemyUserRepository(uow.session).get(writer_uuid)
+        if not writer or not writer.is_writer():
+            raise NotFound("Writer not found")
+        remove_follower(uow.session, writer_uuid, parse_uuid(str(reader["id"]), "reader_id"))
+        uow.commit()
+    return jsonify({"following": False})

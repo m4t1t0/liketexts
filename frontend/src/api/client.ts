@@ -129,6 +129,10 @@ export const api = {
       `/api/v1/writers?q=${encodeURIComponent(q)}&limit=${limit}&offset=${offset}`,
     ),
   getWriter: (id: string) => get<WriterDetail>(`/api/v1/writers/${id}`),
+  followWriter: (id: string) =>
+    post<S["FollowState"]>(`/api/v1/writers/${id}/follow`),
+  unfollowWriter: (id: string) =>
+    del<S["FollowState"]>(`/api/v1/writers/${id}/follow`),
 
   subscribe: () => post<AllocationSummary>("/api/v1/subscriptions/subscribe"),
   allocations: () => get<AllocationSummary>("/api/v1/subscriptions/allocations"),

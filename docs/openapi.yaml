@@ -263,6 +263,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/writers/{writer_id}/follow:
+    post:
+      summary: Follow a writer (preview emails, no allocation).
+      tags:
+      - Writers
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        description: Writer id.
+        schema:
+          type: string
+          format: uuid
+      - *id001
+      responses:
+        '201':
+          description: Now following.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowState'
+        '400':
+          description: Invalid writer_id or self-follow.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing, invalid, or expired access token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Writer not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+    delete:
+      summary: Stop following a writer.
+      tags:
+      - Writers
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        description: Writer id.
+        schema:
+          type: string
+          format: uuid
+      - *id001
+      responses:
+        '200':
+          description: No longer following.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowState'
+        '401':
+          description: Missing, invalid, or expired access token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Writer not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
   /api/v1/subscriptions/subscribe:
     post:
       summary: Create a subscription
@@ -1120,11 +1195,15 @@ components:
       type: object
       required:
       - posts
+      - subscriber_count
       properties:
         posts:
           type: array
           items:
             $ref: '#/components/schemas/WriterPost'
+        subscriber_count:
+          type: integer
+          description: Readers with an active allocation to this writer.
     WriterSummary:
       type: object
       required:
@@ -1146,6 +1225,13 @@ components:
         created_at:
           type: string
           format: date-time
+    FollowState:
+      type: object
+      required:
+      - following
+      properties:
+        following:
+          type: boolean
     WritersList:
       type: object
       required:
@@ -1169,6 +1255,7 @@ components:
       - created_at
       - subscriber_post_count
       - posts
+      - is_following
       properties:
         id:
           type: string
@@ -1187,6 +1274,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostView'
+        is_following:
+          type: boolean
+          description: Whether the (optional) authenticated reader follows this writer.
     AllocationEntry:
       type: object
       required:

@@ -36,6 +36,26 @@ onMounted(async () => {
   }
 });
 
+const feedBusy = ref(false);
+
+async function loadMore(): Promise<void> {
+  const cursor = feed.value?.next_cursor;
+  if (!cursor) return;
+  feedBusy.value = true;
+  error.value = "";
+  try {
+    const page = await api.feed(20, cursor);
+    feed.value = {
+      posts: [...(feed.value?.posts ?? []), ...page.posts],
+      next_cursor: page.next_cursor,
+    };
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : "Failed to load more";
+  } finally {
+    feedBusy.value = false;
+  }
+}
+
 async function run(fn: () => Promise<unknown>): Promise<void> {
   error.value = "";
   try {
@@ -162,6 +182,14 @@ async function run(fn: () => Promise<unknown>): Promise<void> {
       <p v-if="feed && feed.posts.length === 0" class="text-sm text-stone-500">
         Empty feed — allocate a slot to a writer above.
       </p>
+      <button
+        v-if="feed?.next_cursor"
+        :disabled="feedBusy"
+        class="mt-3 rounded border border-stone-300 px-3 py-1 text-sm hover:bg-stone-100"
+        @click="loadMore"
+      >
+        {{ feedBusy ? "Loading…" : "Load more" }}
+      </button>
     </section>
   </div>
 </template>

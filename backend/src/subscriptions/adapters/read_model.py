@@ -274,6 +274,29 @@ def get_subscribers_with_allocation(
     return result
 
 
+def count_writer_subscribers(session: Session, writer_id: UUID) -> int:
+    """Count readers with an active allocation to a writer (dashboard metric)."""
+    from sqlalchemy import func
+
+    row = session.execute(
+        select(func.count())
+        .select_from(writer_subscribers_table)
+        .where(writer_subscribers_table.c.writer_id == writer_id)
+    ).scalar_one()
+    return int(row)
+
+
+def is_following(session: Session, writer_id: UUID, reader_id: UUID) -> bool:
+    """Whether reader follows writer (writer_followers row exists)."""
+    row = session.execute(
+        select(writer_followers_table.c.writer_id).where(
+            writer_followers_table.c.writer_id == writer_id,
+            writer_followers_table.c.reader_id == reader_id,
+        )
+    ).first()
+    return row is not None
+
+
 def get_followers_without_allocation(session: Session, writer_id: UUID) -> list["User"]:
     """Get users following a writer but without allocation."""
     from backend.src.identity.adapters.sqlalchemy_repository import (

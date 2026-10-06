@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from flask import Blueprint, Response, jsonify, request
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from backend.src.identity.api_auth import (
     get_current_reader,
@@ -13,6 +13,7 @@ from backend.src.identity.api_auth import (
     get_optional_reader,
 )
 from backend.src.shared.api import get_bus, parse_uuid
+from backend.src.shared.domain.value_objects import as_status_str
 from backend.src.shared.domain.value_objects import PostId, ReaderId, WriterId
 
 from backend.src.publishing.commands import (
@@ -29,6 +30,18 @@ from backend.src.publishing.commands import (
 )
 
 posts_bp = Blueprint("posts", __name__, url_prefix="/api/v1/posts")
+
+
+def _map_post_error(exc: ValueError) -> None:
+    """Turn domain ValueErrors into RFC7807-mapped HTTP errors."""
+    message = str(exc)
+    lowered = message.lower()
+    if "not found" in lowered:
+        raise NotFound(message)
+    if "not authorized" in lowered:
+        raise Forbidden(message)
+    raise BadRequest(message)
+
 
 
 @posts_bp.route("", methods=["POST"])
@@ -83,7 +96,7 @@ def create_post() -> Response | tuple[Any, ...]:
         {
             "id": str(post.id),
             "title": post.title,
-            "status": post.status.value,
+            "status": as_status_str(post.status),
             "scheduled_for": post.scheduled_for.isoformat()
             if post.scheduled_for
             else None,
@@ -101,13 +114,16 @@ def publish_post(post_id: str) -> Response | tuple[Any, ...]:
 
     command = PublishPostCommand(writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid))
     bus = get_bus()
-    post = bus.handle(command)
+    try:
+        post = bus.handle(command)
+    except ValueError as e:
+        _map_post_error(e)
 
     return jsonify(
         {
             "id": str(post.id),
             "title": post.title,
-            "status": post.status.value,
+            "status": as_status_str(post.status),
             "published_at": post.published_at.isoformat()
             if post.published_at
             else None,
@@ -138,13 +154,16 @@ def schedule_post(post_id: str) -> Response | tuple[Any, ...]:
         writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid), scheduled_for=scheduled_for
     )
     bus = get_bus()
-    post = bus.handle(command)
+    try:
+        post = bus.handle(command)
+    except ValueError as e:
+        _map_post_error(e)
 
     return jsonify(
         {
             "id": str(post.id),
             "title": post.title,
-            "status": post.status.value,
+            "status": as_status_str(post.status),
             "scheduled_for": post.scheduled_for.isoformat()
             if post.scheduled_for
             else None,
@@ -161,13 +180,16 @@ def cancel_post(post_id: str) -> Response | tuple[Any, ...]:
 
     command = CancelPostCommand(writer_id=WriterId(value=writer["id"]), post_id=PostId(value=post_uuid))
     bus = get_bus()
-    post = bus.handle(command)
+    try:
+        post = bus.handle(command)
+    except ValueError as e:
+        _map_post_error(e)
 
     return jsonify(
         {
             "id": str(post.id),
             "title": post.title,
-            "status": post.status.value,
+            "status": as_status_str(post.status),
         }
     )
 
@@ -188,13 +210,16 @@ def update_post(post_id: str) -> Response | tuple[Any, ...]:
         subscriber_content=data.get("subscriber_content"),
     )
     bus = get_bus()
-    post = bus.handle(command)
+    try:
+        post = bus.handle(command)
+    except ValueError as e:
+        _map_post_error(e)
 
     return jsonify(
         {
             "id": str(post.id),
             "title": post.title,
-            "status": post.status.value,
+            "status": as_status_str(post.status),
             "updated_at": post.updated_at.isoformat(),
         }
     )
@@ -257,13 +282,24 @@ def get_writer_posts() -> Response | tuple[Any, ...]:
     bus = get_bus()
     posts = bus.handle(command)
 
+    from backend.src.shared.adapters.unit_of_work import SqlAlchemyUnitOfWork
+    from backend.src.subscriptions.adapters.read_model import (
+        count_writer_subscribers,
+    )
+
+    with SqlAlchemyUnitOfWork() as uow:
+        subscriber_count = count_writer_subscribers(
+            uow.session, parse_uuid(str(writer["id"]), "writer_id")
+        )
+
     return jsonify(
         {
+            "subscriber_count": subscriber_count,
             "posts": [
                 {
                     "id": str(p.id),
                     "title": p.title,
-                    "status": p.status.value,
+                    "status": as_status_str(p.status),
                     "preview_content": p.preview_content,
                     "subscriber_content": p.subscriber_content,
                     "scheduled_for": p.scheduled_for.isoformat()

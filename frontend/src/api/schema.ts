@@ -435,6 +435,119 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/writers/{writer_id}/follow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Follow a writer (preview emails, no allocation). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Optional `Bearer <access_token>`. Full content is returned when the reader has an active allocation to the writer. */
+                    Authorization?: string;
+                };
+                path: {
+                    /** @description Writer id. */
+                    writer_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Now following. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FollowState"];
+                    };
+                };
+                /** @description Invalid writer_id or self-follow. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Missing, invalid, or expired access token. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Writer not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Stop following a writer. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Optional `Bearer <access_token>`. Full content is returned when the reader has an active allocation to the writer. */
+                    Authorization?: string;
+                };
+                path: {
+                    /** @description Writer id. */
+                    writer_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No longer following. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FollowState"];
+                    };
+                };
+                /** @description Missing, invalid, or expired access token. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Writer not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/subscriptions/subscribe": {
         parameters: {
             query?: never;
@@ -1492,6 +1605,8 @@ export interface components {
         };
         WriterPosts: {
             posts: components["schemas"]["WriterPost"][];
+            /** @description Readers with an active allocation to this writer. */
+            subscriber_count: number;
         };
         WriterSummary: {
             /** Format: uuid */
@@ -1502,6 +1617,9 @@ export interface components {
             avatar_url: string | null;
             /** Format: date-time */
             created_at: string;
+        };
+        FollowState: {
+            following: boolean;
         };
         WritersList: {
             writers: components["schemas"]["WriterSummary"][];
@@ -1518,6 +1636,8 @@ export interface components {
             created_at: string;
             subscriber_post_count: number;
             posts: components["schemas"]["PostView"][];
+            /** @description Whether the (optional) authenticated reader follows this writer. */
+            is_following: boolean;
         };
         AllocationEntry: {
             /**

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
-import { api, type WriterDetail } from "../api/client";
+import { api, getToken, type WriterDetail } from "../api/client";
 import Avatar from "../components/Avatar.vue";
 
 const route = useRoute();
 const writer = ref<WriterDetail | null>(null);
 const error = ref("");
+const followBusy = ref(false);
 
 onMounted(async () => {
   try {
@@ -15,6 +16,27 @@ onMounted(async () => {
     error.value = e instanceof Error ? e.message : "Writer not found";
   }
 });
+
+async function toggleFollow(): Promise<void> {
+  if (!writer.value) return;
+  if (!getToken()) {
+    // Anonymous visitors are sent to login (route guard style), not blocked.
+    window.location.href = "/login";
+    return;
+  }
+  followBusy.value = true;
+  error.value = "";
+  try {
+    const state = writer.value.is_following
+      ? await api.unfollowWriter(writer.value.id)
+      : await api.followWriter(writer.value.id);
+    writer.value = { ...writer.value, is_following: state.following };
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : "Follow failed";
+  } finally {
+    followBusy.value = false;
+  }
+}
 </script>
 
 <template>
@@ -26,6 +48,14 @@ onMounted(async () => {
         <div>
           <h1 class="text-2xl font-bold">{{ writer.display_name }}</h1>
         </div>
+        <button
+          class="ml-auto rounded px-3 py-1.5 text-sm font-semibold"
+          :class="writer.is_following ? 'border border-stone-300 text-stone-700 hover:bg-stone-100' : 'bg-stone-900 text-white hover:bg-stone-700'"
+          :disabled="followBusy"
+          @click="toggleFollow"
+        >
+          {{ writer.is_following ? "Following" : "Follow" }}
+        </button>
       </div>
       <p class="mb-6 mt-2 text-sm text-stone-500">
         {{ writer.subscriber_post_count }} published posts

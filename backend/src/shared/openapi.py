@@ -355,8 +355,14 @@ SCHEMAS: dict[str, Any] = {
     },
     "WriterPosts": {
         "type": "object",
-        "required": ["posts"],
-        "properties": {"posts": {"type": "array", "items": _ref("WriterPost")}},
+        "required": ["posts", "subscriber_count"],
+        "properties": {
+            "posts": {"type": "array", "items": _ref("WriterPost")},
+            "subscriber_count": {
+                "type": "integer",
+                "description": "Readers with an active allocation to this writer.",
+            },
+        },
     },
     "WriterSummary": {
         "type": "object",
@@ -377,6 +383,11 @@ SCHEMAS: dict[str, Any] = {
             "created_at": {"type": "string", "format": "date-time"},
         },
     },
+    "FollowState": {
+        "type": "object",
+        "required": ["following"],
+        "properties": {"following": {"type": "boolean"}},
+    },
     "WritersList": {
         "type": "object",
         "required": ["writers", "total"],
@@ -396,6 +407,7 @@ SCHEMAS: dict[str, Any] = {
             "created_at",
             "subscriber_post_count",
             "posts",
+            "is_following",
         ],
         "properties": {
             "id": {"type": "string", "format": "uuid"},
@@ -406,6 +418,10 @@ SCHEMAS: dict[str, Any] = {
             "created_at": {"type": "string", "format": "date-time"},
             "subscriber_post_count": {"type": "integer"},
             "posts": {"type": "array", "items": _ref("PostView")},
+            "is_following": {
+                "type": "boolean",
+                "description": "Whether the (optional) authenticated reader follows this writer.",
+            },
         },
     },
     "AllocationEntry": {
@@ -683,6 +699,35 @@ PATHS: list[dict[str, Any]] = [
             responses={
                 "200": _json_response("Writer with masked posts.", _ref("WriterDetail")),
                 "400": _error_response("Invalid writer_id format."),
+                "404": _error_response("Writer not found."),
+            },
+        ),
+    },
+    {
+        "path": "/api/v1/writers/{writer_id}/follow",
+        "methods": ["POST"],
+        "op": _op(
+            "Follow a writer (preview emails, no allocation).",
+            tags=["Writers"],
+            parameters=[_uuid_param("writer_id", "Writer id."), _AUTH_HEADER],
+            responses={
+                "201": _json_response("Now following.", _ref("FollowState")),
+                "400": _error_response("Invalid writer_id or self-follow."),
+                "401": _error_response("Missing, invalid, or expired access token."),
+                "404": _error_response("Writer not found."),
+            },
+        ),
+    },
+    {
+        "path": "/api/v1/writers/{writer_id}/follow",
+        "methods": ["DELETE"],
+        "op": _op(
+            "Stop following a writer.",
+            tags=["Writers"],
+            parameters=[_uuid_param("writer_id", "Writer id."), _AUTH_HEADER],
+            responses={
+                "200": _json_response("No longer following.", _ref("FollowState")),
+                "401": _error_response("Missing, invalid, or expired access token."),
                 "404": _error_response("Writer not found."),
             },
         ),

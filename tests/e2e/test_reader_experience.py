@@ -66,7 +66,8 @@ class TestReaderExperience:
         assert resp.status_code == 200
         assert resp.get_json()["total"] >= 1
         resp = client.get("/api/v1/writers?q=pub-w")
-        assert any("pub-w" in w["email"] for w in resp.get_json()["writers"])
+        assert any("pub-w" in w["display_name"] for w in resp.get_json()["writers"])
+        assert all("email" not in w for w in resp.get_json()["writers"])
 
         # Writer detail unauthenticated: posts masked
         writer_id = _user_id(wt)
@@ -161,7 +162,8 @@ class TestRoleInference:
 
         # Inferred writer shows up in the public catalog.
         resp = client.get("/api/v1/writers?q=new-writer")
-        assert any("new-writer" in w["email"] for w in resp.get_json()["writers"])
+        assert any("new-writer" in w["display_name"] for w in resp.get_json()["writers"])
+        assert all("email" not in w for w in resp.get_json()["writers"])
 
     def test_subscribe_and_follow_grant_reader(self, client):
         _register(client, "inf-w@test.com")

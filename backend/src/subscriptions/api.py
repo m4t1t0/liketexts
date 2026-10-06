@@ -1,15 +1,14 @@
 """Subscriptions API routes."""
 
 from __future__ import annotations
-from typing import Any, cast
+from typing import Any
 
 from flask import Blueprint, Response, jsonify, request
 from werkzeug.exceptions import BadRequest
-from uuid import UUID
 
 from backend.src.identity.api_auth import get_current_user
+from backend.src.shared.api import get_bus, parse_uuid
 from backend.src.shared.domain.value_objects import ReaderId, WriterId
-from backend.src.shared.service_layer.messagebus import MessageBus
 from backend.src.subscriptions.commands import (
     AssignAllocationCommand,
     GetAllocationsCommand,
@@ -24,13 +23,6 @@ subscriptions_bp = Blueprint(
 )
 
 
-def get_bus() -> MessageBus:
-    """Get message bus from app context."""
-    from flask import current_app
-
-    return cast(MessageBus, getattr(current_app, "message_bus"))
-
-
 @subscriptions_bp.route("/subscribe", methods=["POST"])
 def subscribe() -> Response | tuple[Any, ...]:
     """Create a new subscription."""
@@ -42,7 +34,10 @@ def subscribe() -> Response | tuple[Any, ...]:
         reader_id=ReaderId(value=user["id"]), payment_method_id=payment_method_id
     )
     bus = get_bus()
-    subscription = bus.handle(command)
+    try:
+        subscription = bus.handle(command)
+    except ValueError as e:
+        raise BadRequest(str(e))
 
     return jsonify(subscription.get_allocation_summary()), 201
 
@@ -69,14 +64,14 @@ def assign_allocation() -> Response | tuple[Any, ...]:
     if not writer_id_str:
         raise BadRequest("writer_id is required")
 
-    try:
-        writer_id = UUID(writer_id_str)
-    except ValueError:
-        raise BadRequest("Invalid writer_id format")
+    writer_id = parse_uuid(writer_id_str, "writer_id")
 
     command = AssignAllocationCommand(reader_id=ReaderId(value=user["id"]), writer_id=WriterId(value=writer_id))
     bus = get_bus()
-    result = bus.handle(command)
+    try:
+        result = bus.handle(command)
+    except ValueError as e:
+        raise BadRequest(str(e))
 
     return jsonify(result)
 
@@ -92,11 +87,8 @@ def swap_allocation() -> Response | tuple[Any, ...]:
     if not current_writer_id_str or not new_writer_id_str:
         raise BadRequest("current_writer_id and new_writer_id are required")
 
-    try:
-        current_writer_id = UUID(current_writer_id_str)
-        new_writer_id = UUID(new_writer_id_str)
-    except ValueError:
-        raise BadRequest("Invalid writer_id format")
+    current_writer_id = parse_uuid(current_writer_id_str, "current_writer_id")
+    new_writer_id = parse_uuid(new_writer_id_str, "new_writer_id")
 
     command = SwapAllocationCommand(
         reader_id=ReaderId(value=user["id"]),
@@ -117,10 +109,7 @@ def release_allocation(writer_id: str) -> Response | tuple[Any, ...]:
     """Release a writer slot."""
     user = get_current_user()
 
-    try:
-        writer_uuid = UUID(writer_id)
-    except ValueError:
-        raise BadRequest("Invalid writer_id format")
+    writer_uuid = parse_uuid(writer_id, "writer_id")
 
     command = ReleaseAllocationCommand(reader_id=ReaderId(value=user["id"]), writer_id=WriterId(value=writer_uuid))
     bus = get_bus()

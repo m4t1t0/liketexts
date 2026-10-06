@@ -9,6 +9,7 @@ from uuid import UUID
 from werkzeug.exceptions import BadRequest, NotFound
 
 from backend.src.identity.api_auth import get_optional_reader_id
+from backend.src.shared.domain.value_objects import as_status_str
 
 writers_bp = Blueprint("writers", __name__, url_prefix="/api/v1/writers")
 
@@ -30,13 +31,18 @@ def list_writers() -> Response | tuple[Any, ...]:
         users = user_repo.list()
         writers = [u for u in users if u.is_writer()]
         if query:
-            writers = [w for w in writers if query in w.email.lower()]
+            writers = [
+                w
+                for w in writers
+                if query in w.display_name.lower()
+                or query in (w.first_name or "").lower()
+                or query in (w.last_name or "").lower()
+            ]
         total = len(writers)
         writers = writers[offset : offset + limit]
         result = [
             {
                 "id": str(w.id),
-                "email": w.email,
                 "display_name": w.display_name,
                 "first_name": w.first_name,
                 "last_name": w.last_name,
@@ -84,11 +90,7 @@ def get_writer(writer_id: str) -> Response | tuple[Any, ...]:
             sub_repo = SqlAlchemySubscriptionRepository(uow.session)
             subscription = sub_repo.get_by_reader(reader_id)
             if subscription:
-                status = (
-                    subscription.status.value
-                    if hasattr(subscription.status, "value")
-                    else subscription.status
-                )
+                status = as_status_str(subscription.status)
                 if status == "active":
                     has_allocation = subscription.is_writer_allocated(writer_uuid)
 
@@ -103,7 +105,6 @@ def get_writer(writer_id: str) -> Response | tuple[Any, ...]:
 
         result = {
             "id": str(writer.id),
-            "email": writer.email,
             "display_name": writer.display_name,
             "first_name": writer.first_name,
             "last_name": writer.last_name,

@@ -25,7 +25,6 @@ onMounted(async () => {
         <Avatar :name="writer.display_name" :avatar-url="writer.avatar_url" size="h-12 w-12" />
         <div>
           <h1 class="text-2xl font-bold">{{ writer.display_name }}</h1>
-          <p class="text-sm text-stone-500">{{ writer.email }}</p>
         </div>
       </div>
       <p class="mb-6 mt-2 text-sm text-stone-500">

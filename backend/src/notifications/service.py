@@ -44,7 +44,7 @@ class NotificationService:
                 post_title=post.title,
                 post_preview=post.preview_content,
                 post_full=post.subscriber_content,
-                writer_name=writer.email,
+                writer_name=writer.display_name,
             )
             self._sender.send_batch(
                 with_allocation,
@@ -54,17 +54,17 @@ class NotificationService:
                     "html": html,
                     "post_title": post.title,
                     "post_full": post.subscriber_content,
-                    "writer_name": writer.email,
+                    "writer_name": writer.display_name,
                 },
             )
 
         if without_allocation:
-            subscribe_url = f"{self._settings.api_prefix}/subscriptions/subscribe"
+            subscribe_url = f"{self._settings.frontend_url}/reader"
             subject, html = self._renderer.render_post_published_preview(
                 recipient=without_allocation[0],
                 post_title=post.title,
                 post_preview=post.preview_content,
-                writer_name=writer.email,
+                writer_name=writer.display_name,
                 subscribe_url=subscribe_url,
             )
             self._sender.send_batch(
@@ -75,7 +75,7 @@ class NotificationService:
                     "html": html,
                     "post_title": post.title,
                     "post_preview": post.preview_content,
-                    "writer_name": writer.email,
+                    "writer_name": writer.display_name,
                     "subscribe_url": subscribe_url,
                 },
             )

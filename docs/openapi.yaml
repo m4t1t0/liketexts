@@ -198,7 +198,7 @@ paths:
       - name: q
         in: query
         required: false
-        description: Case-insensitive email filter.
+        description: Case-insensitive display-name filter.
         schema:
           type: string
       - name: limit
@@ -1129,7 +1129,6 @@ components:
       type: object
       required:
       - id
-      - email
       - display_name
       - first_name
       - last_name
@@ -1139,8 +1138,6 @@ components:
         id:
           type: string
           format: uuid
-        email:
-          type: string
         display_name:
           type: string
         first_name: *id002
@@ -1165,7 +1162,6 @@ components:
       type: object
       required:
       - id
-      - email
       - display_name
       - first_name
       - last_name
@@ -1177,8 +1173,6 @@ components:
         id:
           type: string
           format: uuid
-        email:
-          type: string
         display_name:
           type: string
         first_name: *id002

@@ -20,7 +20,7 @@ const error = ref("");
 const writers = computed(() => {
   const q = query.value.trim().toLowerCase();
   const all = catalog.value?.writers ?? [];
-  return q ? all.filter((w) => w.email.toLowerCase().includes(q)) : all;
+  return q ? all.filter((w) => w.display_name.toLowerCase().includes(q)) : all;
 });
 
 function timeAgo(iso: string | null): string {
@@ -132,7 +132,6 @@ const navItems = [
               <RouterLink :to="`/writers/${w.id}`" class="block truncate font-medium hover:underline">
                 {{ w.display_name }}
               </RouterLink>
-              <p class="truncate text-xs text-stone-400">{{ w.email }}</p>
             </div>
           </li>
         </ul>

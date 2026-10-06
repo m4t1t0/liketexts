@@ -13,7 +13,7 @@ const swapFrom = ref("");
 const swapTo = ref("");
 
 const writerName = computed(() => {
-  const map = new Map((catalog.value?.writers ?? []).map((w) => [w.id, w.email]));
+  const map = new Map((catalog.value?.writers ?? []).map((w) => [w.id, w.display_name]));
   return (id: string | null) => (id ? (map.get(id) ?? id) : "Empty slot");
 });
 
@@ -95,7 +95,7 @@ async function run(fn: () => Promise<unknown>): Promise<void> {
             <select v-model="assignId" class="rounded border border-stone-300 px-2 py-1">
               <option value="" disabled>Select writer</option>
               <option v-for="w in catalog?.writers ?? []" :key="w.id" :value="w.id">
-                {{ w.email }}
+                {{ w.display_name }}
               </option>
             </select>
             <button
@@ -123,7 +123,7 @@ async function run(fn: () => Promise<unknown>): Promise<void> {
             <select v-model="swapTo" class="rounded border border-stone-300 px-2 py-1">
               <option value="" disabled>To</option>
               <option v-for="w in catalog?.writers ?? []" :key="w.id" :value="w.id">
-                {{ w.email }}
+                {{ w.display_name }}
               </option>
             </select>
             <button

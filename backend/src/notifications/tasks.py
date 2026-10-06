@@ -27,6 +27,13 @@ celery_app.conf.update(
     task_acks_late=True,
     task_reject_on_worker_lost=True,
     worker_prefetch_multiplier=1,
+    beat_schedule={
+        # Publish due scheduled posts + enqueue their emails, every minute.
+        "process-scheduled-posts-every-minute": {
+            "task": "backend.src.notifications.tasks.process_scheduled_posts",
+            "schedule": 60.0,
+        },
+    },
 )
 
 

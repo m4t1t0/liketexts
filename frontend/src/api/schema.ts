@@ -340,7 +340,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Case-insensitive email filter. */
+                    /** @description Case-insensitive display-name filter. */
                     q?: string;
                     /** @description Max writers to return. */
                     limit?: number;
@@ -1496,7 +1496,6 @@ export interface components {
         WriterSummary: {
             /** Format: uuid */
             id: string;
-            email: string;
             display_name: string;
             first_name: string | null;
             last_name: string | null;
@@ -1511,7 +1510,6 @@ export interface components {
         WriterDetail: {
             /** Format: uuid */
             id: string;
-            email: string;
             display_name: string;
             first_name: string | null;
             last_name: string | null;

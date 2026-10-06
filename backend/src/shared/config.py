@@ -67,6 +67,11 @@ class Settings:
     )
     api_prefix: str = field(default_factory=lambda: _get_env("API_PREFIX", "/api/v1"))
 
+    # Public frontend URL (absolute links inside emails)
+    frontend_url: str = field(
+        default_factory=lambda: _get_env("FRONTEND_URL", "http://localhost:5173")
+    )
+
     # Database
     database_url: str = field(default_factory=_get_database_url)
     database_pool_size: int = field(

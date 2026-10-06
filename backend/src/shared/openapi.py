@@ -362,7 +362,6 @@ SCHEMAS: dict[str, Any] = {
         "type": "object",
         "required": [
             "id",
-            "email",
             "display_name",
             "first_name",
             "last_name",
@@ -371,7 +370,6 @@ SCHEMAS: dict[str, Any] = {
         ],
         "properties": {
             "id": {"type": "string", "format": "uuid"},
-            "email": {"type": "string"},
             "display_name": {"type": "string"},
             "first_name": _NULLABLE_STR,
             "last_name": _NULLABLE_STR,
@@ -391,7 +389,6 @@ SCHEMAS: dict[str, Any] = {
         "type": "object",
         "required": [
             "id",
-            "email",
             "display_name",
             "first_name",
             "last_name",
@@ -402,7 +399,6 @@ SCHEMAS: dict[str, Any] = {
         ],
         "properties": {
             "id": {"type": "string", "format": "uuid"},
-            "email": {"type": "string"},
             "display_name": {"type": "string"},
             "first_name": _NULLABLE_STR,
             "last_name": _NULLABLE_STR,
@@ -655,7 +651,7 @@ PATHS: list[dict[str, Any]] = [
             tags=["Writers"],
             auth=False,
             parameters=[
-                _param("q", required=False, description="Case-insensitive email filter."),
+                _param("q", required=False, description="Case-insensitive display-name filter."),
                 _param(
                     "limit",
                     required=False,

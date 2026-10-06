@@ -61,5 +61,6 @@ No host install needed. `requirements.txt` is baked into the Docker image
 - No writer payouts v1, counts only — see `docs/adr/0003-no-payouts-v1.md`
 - Email: stub log v1, provider interface for Mailchimp later — see `docs/adr/0004-no-email-v1-provider-ready.md`
 - Testing: pytest with unit, integration, and e2e (Flask client paywall checks)
-- Default port: 5000 (macOS: turn off AirPlay Receiver, it squats on :5000)
+- Default port: 5000 (macOS: AirPlay Receiver can squat on :5000 and block the
+  API bind — disabling it resolves this; confirmed fixed in this environment)
 - `start`/`develop`/`stop`/`restart` manage the Docker Compose stack; `local` runs Flask directly on the host (`--port`, `PORT` env honored by `app.py`; `--debug` enables the reloader via `FLASK_DEBUG=true`)

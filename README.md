@@ -33,8 +33,9 @@ make start
 
 Health: `GET /health`, readiness (db + redis + migrations): `GET /health/ready`.
 
-> macOS: turn off **AirPlay Receiver** (uses port 5000) or the API forward
-> won't bind — recreate the container after (`docker compose up -d --force-recreate api`).
+> macOS: if the API can't bind, **AirPlay Receiver** may be squatting on port
+> 5000 — disabling it resolves this (confirmed fixed in this environment).
+> Recreating the container won't free the port; disabling AirPlay does.
 
 ## Local dev (no Docker)
 

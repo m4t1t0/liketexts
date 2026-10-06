@@ -59,42 +59,12 @@ onMounted(async () => {
     error.value = e instanceof Error ? e.message : "Failed to load homepage";
   }
 });
-
-const navItems = [
-  { label: "Home", to: "/", active: true },
-  { label: "Subscriptions", to: "/login", active: false },
-  { label: "Chat", to: "/login", active: false },
-  { label: "Activity", to: "/login", active: false },
-  { label: "Explore", to: "/#writers", active: false },
-  { label: "Profile", to: "/login", active: false },
-];
 </script>
 
 <template>
-  <div class="grid gap-8 lg:grid-cols-[180px_1fr_300px]">
-    <!-- Left sidebar -->
-    <aside class="hidden lg:block">
-      <nav class="sticky top-6 space-y-1 text-[15px]">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.label"
-          :to="item.to"
-          class="block rounded px-2 py-2"
-          :class="item.active ? 'font-semibold' : 'text-stone-500 hover:bg-stone-100'"
-        >
-          {{ item.label }}
-        </RouterLink>
-        <RouterLink
-          to="/register"
-          class="mt-3 block rounded bg-orange-600 px-2 py-2 text-center font-semibold text-white hover:bg-orange-500"
-        >
-          Create
-        </RouterLink>
-      </nav>
-    </aside>
-
+  <div class="mx-auto grid max-w-5xl gap-10 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-8">
     <!-- Main column -->
-    <div>
+    <div class="min-w-0">
       <section class="overflow-hidden rounded-xl bg-gradient-to-r from-emerald-800 to-teal-700 px-8 py-12 text-center text-white">
         <h1 class="mx-auto max-w-xl text-3xl font-bold leading-tight sm:text-4xl">
           Get paid for the work you believe in
@@ -113,21 +83,26 @@ const navItems = [
       <p v-if="error" class="mt-4 text-sm text-red-600">{{ error }}</p>
 
       <section class="mt-8">
-        <p class="mb-4 text-sm text-stone-500">For you</p>
-        <ul class="space-y-8">
-          <li v-for="p in posts" :key="p.id">
+        <p class="mb-1 flex items-center gap-1 text-sm font-medium text-stone-500">
+          For you
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </p>
+        <ul>
+          <li v-for="p in posts" :key="p.id" class="border-b border-stone-200 py-5">
             <div class="flex items-center gap-2">
-              <Avatar :name="p.writer_name ?? '?' " :avatar-url="p.writer_avatar_url" size="h-9 w-9" />
-              <span class="text-sm font-semibold">{{ p.writer_name ?? "Unknown writer" }}</span>
-              <span class="text-sm text-stone-400">{{ timeAgo(p.published_at) }}</span>
+              <Avatar :name="p.writer_name ?? '?'" :avatar-url="p.writer_avatar_url" size="h-7 w-7" />
+              <span class="text-[15px] font-semibold">{{ p.writer_name ?? "Unknown writer" }}</span>
+              <span class="text-[13px] text-stone-400">· {{ timeAgo(p.published_at) }}</span>
               <RouterLink to="/login" class="ml-auto text-sm font-semibold text-orange-600 hover:underline">
                 Subscribe
               </RouterLink>
             </div>
-            <p class="mt-2 text-[15px] leading-relaxed text-stone-700">{{ p.preview_content }}</p>
-            <RouterLink :to="`/posts/${p.id}`" class="mt-1 inline-block text-sm text-stone-500 hover:underline">
-              Show more
+            <RouterLink :to="`/posts/${p.id}`" class="mt-2 block text-lg font-bold leading-snug hover:underline">
+              {{ p.title }}
             </RouterLink>
+            <p class="mt-1 text-[15px] leading-relaxed text-stone-700">{{ p.preview_content }}</p>
           </li>
         </ul>
       </section>

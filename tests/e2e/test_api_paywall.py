@@ -5,8 +5,8 @@ from __future__ import annotations
 # Data is cleared between tests by the _clear_data fixture in conftest.py
 
 
-class TestPaywallAPI:
-    """E2E tests for paywall functionality."""
+class _PaywallHelpers:
+    """Shared helpers for paywall/subtitle test classes."""
 
     def _register_user(self, client, email: str, password: str = "password123"):
         """Helper to register a user (no role — inferred from activity)."""
@@ -35,7 +35,7 @@ class TestPaywallAPI:
         payload = jwt.decode(access_token, settings.secret_key, algorithms=[settings.jwt_algorithm])
         return payload["sub"]
 
-    def _create_post(self, client, writer_token: str, title: str, preview: str, subscriber: str, scheduled_at: str = None):
+    def _create_post(self, client, writer_token: str, title: str, preview: str, subscriber: str, scheduled_at: str = None, subtitle: str = None):
         """Helper to create a post."""
         data = {
             "title": title,
@@ -44,6 +44,8 @@ class TestPaywallAPI:
         }
         if scheduled_at:
             data["scheduled_at"] = scheduled_at
+        if subtitle is not None:
+            data["subtitle"] = subtitle
         return client.post("/api/v1/posts", json=data, headers=self._auth_header(writer_token))
 
     def _publish_post(self, client, writer_token: str, post_id: str):
@@ -67,6 +69,9 @@ class TestPaywallAPI:
         return client.post("/api/v1/subscriptions/allocations/assign", json={
             "writer_id": writer_user_id,
         }, headers=self._auth_header(reader_token))
+
+class TestPaywallAPI(_PaywallHelpers):
+    """E2E tests for paywall functionality."""
 
     def test_public_can_read_preview_only(self, client):
         """Test that non-subscribers only see preview content on single post."""
@@ -259,3 +264,82 @@ class TestPaywallAPI:
         post = resp.get_json()
         assert post["subscriber_content"] == "My subscriber content"
         assert post["has_full_access"] is True
+
+class TestPostSubtitle(_PaywallHelpers):
+    """Optional subtitle field end-to-end (create, read, update)."""
+
+    def test_create_with_subtitle_roundtrip(self, client):
+        self._register_user(client, "subtitle-w@test.com")
+        wt = self._login(client, "subtitle-w@test.com")
+        resp = self._create_post(
+            client,
+            wt["access_token"],
+            "Titled post",
+            "Preview text",
+            "Full text",
+            subtitle="A crisp one-liner dek",
+        )
+        assert resp.status_code == 201, resp.get_json()
+        assert resp.get_json()["subtitle"] == "A crisp one-liner dek"
+
+        post_id = resp.get_json()["id"]
+
+        # Public read includes the subtitle (preview-masked)
+        public = client.get(f"/api/v1/posts/{post_id}").get_json()
+        assert public["subtitle"] == "A crisp one-liner dek"
+        assert public["has_full_access"] is False
+
+        # Writer dashboard payload includes it
+        own = client.get(
+            "/api/v1/posts/writer", headers=self._auth_header(wt["access_token"])
+        ).get_json()
+        entry = next(p for p in own["posts"] if p["id"] == post_id)
+        assert entry["subtitle"] == "A crisp one-liner dek"
+
+    def test_subtitle_defaults_to_empty(self, client):
+        self._register_user(client, "nosubtitle-w@test.com")
+        wt = self._login(client, "nosubtitle-w@test.com")
+        resp = self._create_post(client, wt["access_token"], "Bare", "P", "F")
+        assert resp.status_code == 201
+        assert resp.get_json()["subtitle"] == ""
+        body = client.get(
+            f"/api/v1/posts/{resp.get_json()['id']}"
+        ).get_json()
+        assert body["subtitle"] == ""
+
+    def test_update_subtitle_only(self, client):
+        self._register_user(client, "patchsub-w@test.com")
+        wt = self._login(client, "patchsub-w@test.com")
+        post_id = self._create_post(
+            client, wt["access_token"], "Keep", "P", "F", subtitle="Old dek"
+        ).get_json()["id"]
+
+        resp = client.patch(
+            f"/api/v1/posts/{post_id}",
+            json={"subtitle": "New dek"},
+            headers=self._auth_header(wt["access_token"]),
+        )
+        assert resp.status_code == 200, resp.get_json()
+        assert resp.get_json()["subtitle"] == "New dek"
+        assert resp.get_json()["title"] == "Keep"  # untouched
+
+        # Clearing with empty string works
+        resp = client.patch(
+            f"/api/v1/posts/{post_id}",
+            json={"subtitle": ""},
+            headers=self._auth_header(wt["access_token"]),
+        )
+        assert resp.get_json()["subtitle"] == ""
+
+    def test_subtitle_rejected_over_500_chars(self, client):
+        self._register_user(client, "longsub-w@test.com")
+        wt = self._login(client, "longsub-w@test.com")
+        resp = self._create_post(
+            client,
+            wt["access_token"],
+            "Too long",
+            "P",
+            "F",
+            subtitle="x" * 501,
+        )
+        assert resp.status_code == 400

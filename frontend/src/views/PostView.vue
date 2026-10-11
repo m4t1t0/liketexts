@@ -82,6 +82,12 @@ onMounted(async () => {
       <h1 class="mt-7 font-serif text-3xl font-bold leading-tight tracking-tight sm:text-[40px]">
         {{ post.title }}
       </h1>
+      <p
+        v-if="post.subtitle"
+        class="mt-3 font-serif text-lg leading-relaxed text-stone-500 sm:text-xl"
+      >
+        {{ post.subtitle }}
+      </p>
 
       <!-- Body -->
       <div

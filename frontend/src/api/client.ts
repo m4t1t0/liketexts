@@ -148,6 +148,7 @@ export const api = {
 
   createPost: (input: {
     title: string;
+    subtitle?: string;
     preview_content: string;
     subscriber_content?: string;
     scheduled_at?: string;
@@ -161,6 +162,13 @@ export const api = {
   recent: (limit = 10) => get<S["RecentPosts"]>(`/api/v1/posts/recent?limit=${limit}`),
   writerPosts: (status?: string) =>
     get<WriterPosts>(`/api/v1/posts/writer${status ? `?status=${status}` : ""}`),
-  updatePost: (id: string, input: { title?: string; preview_content?: string; subscriber_content?: string }) =>
-    patch<S["UpdatedPost"]>(`/api/v1/posts/${id}`, input),
+  updatePost: (
+    id: string,
+    input: {
+      title?: string;
+      subtitle?: string;
+      preview_content?: string;
+      subscriber_content?: string;
+    },
+  ) => patch<S["UpdatedPost"]>(`/api/v1/posts/${id}`, input),
 };

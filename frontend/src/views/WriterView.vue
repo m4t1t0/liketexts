@@ -10,6 +10,7 @@ const posts = ref<WriterPosts | null>(null);
 const error = ref("");
 
 const title = ref("");
+const subtitle = ref("");
 const preview = ref("");
 const subscriber = ref("");
 const scheduledAt = ref("");
@@ -17,6 +18,7 @@ const scheduledAt = ref("");
 // Inline edit state (PATCH /posts/{id}); null = no post being edited.
 const editingId = ref<string | null>(null);
 const editTitle = ref("");
+const editSubtitle = ref("");
 const editPreview = ref("");
 const editSubscriber = ref("");
 
@@ -37,11 +39,12 @@ async function create(): Promise<void> {
   try {
     await api.createPost({
       title: title.value,
+      subtitle: subtitle.value,
       preview_content: preview.value,
       subscriber_content: subscriber.value,
       ...(scheduledAt.value ? { scheduled_at: new Date(scheduledAt.value).toISOString() } : {}),
     });
-    title.value = preview.value = subscriber.value = scheduledAt.value = "";
+    title.value = subtitle.value = preview.value = subscriber.value = scheduledAt.value = "";
     await refresh();
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Create failed";
@@ -61,6 +64,7 @@ async function publish(id: string): Promise<void> {
 function startEdit(p: WriterPost): void {
   editingId.value = p.id;
   editTitle.value = p.title;
+  editSubtitle.value = p.subtitle;
   editPreview.value = p.preview_content;
   editSubscriber.value = p.subscriber_content;
 }
@@ -75,6 +79,7 @@ async function saveEdit(): Promise<void> {
   try {
     await api.updatePost(editingId.value, {
       title: editTitle.value,
+      subtitle: editSubtitle.value,
       preview_content: editPreview.value,
       subscriber_content: editSubscriber.value,
     });
@@ -102,6 +107,11 @@ async function saveEdit(): Promise<void> {
         v-model="title"
         required
         placeholder="Title"
+        class="w-full rounded border border-stone-300 px-3 py-2"
+      />
+      <input
+        v-model="subtitle"
+        placeholder="Subtitle (optional)"
         class="w-full rounded border border-stone-300 px-3 py-2"
       />
       <textarea
@@ -141,6 +151,11 @@ async function saveEdit(): Promise<void> {
             <input
               v-model="editTitle"
               required
+              class="w-full rounded border border-stone-300 px-3 py-2"
+            />
+            <input
+              v-model="editSubtitle"
+              placeholder="Subtitle (optional)"
               class="w-full rounded border border-stone-300 px-3 py-2"
             />
             <textarea

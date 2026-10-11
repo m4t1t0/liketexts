@@ -220,6 +220,7 @@ SCHEMAS: dict[str, Any] = {
             "id",
             "writer_id",
             "title",
+            "subtitle",
             "preview_content",
             "status",
             "published_at",
@@ -233,6 +234,7 @@ SCHEMAS: dict[str, Any] = {
             "id": {"type": "string", "format": "uuid"},
             "writer_id": {"type": "string", "format": "uuid"},
             "title": {"type": "string"},
+            "subtitle": {"type": "string"},
             "preview_content": {"type": "string"},
             "status": {"type": "string", "example": "published"},
             "published_at": _NULLABLE_DATETIME,
@@ -248,6 +250,7 @@ SCHEMAS: dict[str, Any] = {
         "required": ["title", "preview_content"],
         "properties": {
             "title": {"type": "string"},
+            "subtitle": {"type": "string", "default": ""},
             "preview_content": {"type": "string"},
             "subscriber_content": {"type": "string", "default": ""},
             "scheduled_at": {
@@ -259,10 +262,11 @@ SCHEMAS: dict[str, Any] = {
     },
     "CreatedPost": {
         "type": "object",
-        "required": ["id", "title", "status", "scheduled_for", "created_at"],
+        "required": ["id", "title", "subtitle", "status", "scheduled_for", "created_at"],
         "properties": {
             "id": {"type": "string", "format": "uuid"},
             "title": {"type": "string"},
+            "subtitle": {"type": "string"},
             "status": {"type": "string"},
             "scheduled_for": _NULLABLE_DATETIME,
             "created_at": {"type": "string", "format": "date-time"},
@@ -299,10 +303,11 @@ SCHEMAS: dict[str, Any] = {
     },
     "UpdatedPost": {
         "type": "object",
-        "required": ["id", "title", "status", "updated_at"],
+        "required": ["id", "title", "subtitle", "status", "updated_at"],
         "properties": {
             "id": {"type": "string", "format": "uuid"},
             "title": {"type": "string"},
+            "subtitle": {"type": "string"},
             "status": {"type": "string"},
             "updated_at": {"type": "string", "format": "date-time"},
         },
@@ -311,6 +316,7 @@ SCHEMAS: dict[str, Any] = {
         "type": "object",
         "properties": {
             "title": {"type": "string"},
+            "subtitle": {"type": "string"},
             "preview_content": {"type": "string"},
             "subscriber_content": {"type": "string"},
         },
@@ -335,6 +341,7 @@ SCHEMAS: dict[str, Any] = {
         "required": [
             "id",
             "title",
+            "subtitle",
             "status",
             "preview_content",
             "subscriber_content",
@@ -345,6 +352,7 @@ SCHEMAS: dict[str, Any] = {
         "properties": {
             "id": {"type": "string", "format": "uuid"},
             "title": {"type": "string"},
+            "subtitle": {"type": "string"},
             "status": {"type": "string"},
             "preview_content": {"type": "string"},
             "subscriber_content": {"type": "string"},

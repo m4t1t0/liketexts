@@ -17,6 +17,7 @@ class CreatePostCommand(Command):
     title: str
     preview_content: str
     subscriber_content: str
+    subtitle: str = ""
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,7 @@ class CreateScheduledPostCommand(Command):
     preview_content: str
     subscriber_content: str
     scheduled_for: datetime
+    subtitle: str = ""
 
 
 @dataclass(frozen=True)
@@ -62,6 +64,7 @@ class UpdatePostCommand(Command):
     writer_id: WriterId
     post_id: PostId
     title: Optional[str] = None
+    subtitle: Optional[str] = None
     preview_content: Optional[str] = None
     subscriber_content: Optional[str] = None
 

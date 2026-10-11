@@ -1512,6 +1512,7 @@ export interface components {
             /** Format: uuid */
             writer_id: string;
             title: string;
+            subtitle: string;
             preview_content: string;
             /** @example published */
             status: string;
@@ -1526,6 +1527,8 @@ export interface components {
         };
         CreatePostRequest: {
             title: string;
+            /** @default  */
+            subtitle: string;
             preview_content: string;
             /** @default  */
             subscriber_content: string;
@@ -1539,6 +1542,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             title: string;
+            subtitle: string;
             status: string;
             /** Format: date-time */
             scheduled_for: string | null;
@@ -1571,12 +1575,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             title: string;
+            subtitle: string;
             status: string;
             /** Format: date-time */
             updated_at: string;
         };
         UpdatePostRequest: {
             title?: string;
+            subtitle?: string;
             preview_content?: string;
             subscriber_content?: string;
         };
@@ -1593,6 +1599,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             title: string;
+            subtitle: string;
             status: string;
             preview_content: string;
             subscriber_content: string;

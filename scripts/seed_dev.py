@@ -66,12 +66,13 @@ FOLLOWS = {
     "reader3@example.com": ["mara@example.com", "sam@example.com", "ingrid@example.com"],
 }
 
-# title, preview, subscriber content, published offset in hours (None = draft,
+# title, subtitle, preview, subscriber content, hours ago (Optional = draft,
 # negative handled as scheduled in SCHEDULED below)
 POSTS = {
     "mara@example.com": [
         (
             "Reading the trail before the map existed",
+            "Desire lines, sheep paths, and what landscape knows",
             "Long before surveyors drew lines, people read the land itself — "
             "moss, grain of stone, the bend of trees. What did they know that we forgot?",
             "## Reading the trail before the map existed\n\n"
@@ -86,6 +87,7 @@ POSTS = {
         ),
         (
             "The last lighthouse keeper's logbook",
+            "Forty-one years of weather in pencil",
             "Forty-one years of weather in pencil. Entry 3,102 just says: "
             "\"Fog. Wound the clock. Listened.\"",
             "## The last lighthouse keeper's logbook\n\n"
@@ -101,6 +103,7 @@ POSTS = {
     "dev@example.com": [
         (
             "Your deploy pipeline doesn't need another tool",
+            "Fewer gates, faster deploys, more sleep",
             "Every green checkmark you add is a promise you'll keep at 2am. "
             "Most pipelines need fewer gates, not more.",
             "## Your deploy pipeline doesn't need another tool\n\n"
@@ -114,6 +117,7 @@ POSTS = {
         ),
         (
             "The bug that only happened on Tuesdays",
+            "A cache, a cron, and a timezone walked into a bar",
             "A cache, a cron, and a timezone walked into a bar. This one took "
             "us six days to find and one line to fix.",
             "## The bug that only happened on Tuesdays\n\n"
@@ -130,6 +134,7 @@ POSTS = {
     "june@example.com": [
         (
             "Why your grinder matters more than your beans",
+            "Grind distribution is the hidden variable",
             "Unpopular in specialty circles: a $200 grinder with honest beans "
             "beats a $40 bag through a dull blade. Here's the taste math.",
             "## Why your grinder matters more than your beans\n\n"
@@ -144,6 +149,7 @@ POSTS = {
         ),
         (
             "A field guide to water",
+            "Ratio matters less than hardness and stability",
             "The recipe everyone argues about (ratio) matters less than the "
             "two things nobody measures: hardness and temperature stability.",
             "## A field guide to water\n\n"
@@ -158,6 +164,7 @@ POSTS = {
     "tomas@example.com": [
         (
             "Border lines that were drawn in a single afternoon",
+            "A ruler on a map is a promise someone else keeps",
             "Some of the world's straightest borders were settled over one "
             "table, one bottle, and one ruler. The consequences outlasted "
             "all three.",
@@ -172,6 +179,7 @@ POSTS = {
         ),
         (
             "The map that refused to be wrong",
+            "Sandy Island was discovered, then undiscovered",
             "For sixty years, one survey chart kept being reprinted with the "
             "same island on it. The island did not exist.",
             "## The map that refused to be wrong\n\n"
@@ -187,6 +195,7 @@ POSTS = {
     "ingrid@example.com": [
         (
             "Fermentation is just patience with a lid on it",
+            "Salt, time, silence — and one good crunch",
             "My grandmother made sauerkraut in a bucket; I make it in a jar "
             "with an airlock. Same microbe, same trick: salt, time, silence.",
             "## Fermentation is just patience with a lid on it\n\n"
@@ -201,6 +210,7 @@ POSTS = {
     "sam@example.com": [
         (
             "What we lost when we stopped printing corrections",
+            "A printed error is permanent; a digital edit isn't",
             "A printed error is permanent, so newspapers printed corrections "
             "prominently. A digital edit leaves no scar — and we edit like it.",
             "## What we lost when we stopped printing corrections\n\n"
@@ -219,12 +229,14 @@ POSTS = {
 DRAFT = {
     "mara@example.com": (
         "Winter hedgerows (draft)",
+        "January notes toward a walk",
         "Notes toward a January walk — holly, haw, and the geometry of bare fields.",
         "Draft notes. Probably three sections: holly as boundary marker, "
         "the hawthorn's folklore debt, and what a bare field reveals about slope.",
     ),
     "dev@example.com": (
         "Postmortem template (draft)",
+        "Five questions, one page, no theater",
         "The five-question postmortem we actually fill in — blameless, short, boring.",
         "Draft. Five questions, one page, no action-item theater.",
     ),
@@ -234,6 +246,7 @@ DRAFT = {
 SCHEDULED = {
     "june@example.com": (
         "Cupping notes: three Kenyas, one table",
+        "Three lots, one table, full scorecard Thursday",
         "This Thursday's cupping: three Kenyan lots side by side. Notes go out "
         "with the full scorecard.",
         "Full cupping scorecard and tasting notes for the three-lot Kenya "
@@ -411,12 +424,13 @@ def seed() -> None:
     with SqlAlchemyUnitOfWork() as uow:
         for writer_email, posts in POSTS.items():
             writer = users[writer_email]
-            for title, preview, full, hours_ago in posts:
+            for title, subtitle, preview, full, hours_ago in posts:
                 post = Post.create_draft(
                     writer_id=writer.id,
                     title=title,
                     preview_content=preview,
                     subscriber_content=full,
+                    subtitle=subtitle,
                 )
                 post.publish()
                 # Stagger publish dates so the feed looks lived-in
@@ -425,18 +439,19 @@ def seed() -> None:
                 uow.session.add(post)
                 created += 1
 
-        for writer_email, (title, preview, full) in DRAFT.items():
+        for writer_email, (title, subtitle, preview, full) in DRAFT.items():
             uow.session.add(
                 Post.create_draft(
                     writer_id=users[writer_email].id,
                     title=title,
                     preview_content=preview,
                     subscriber_content=full,
+                    subtitle=subtitle,
                 )
             )
             created += 1
 
-        for writer_email, (title, preview, full) in SCHEDULED.items():
+        for writer_email, (title, subtitle, preview, full) in SCHEDULED.items():
             uow.session.add(
                 Post.create_scheduled(
                     writer_id=users[writer_email].id,
@@ -444,6 +459,7 @@ def seed() -> None:
                     preview_content=preview,
                     subscriber_content=full,
                     scheduled_for=now + timedelta(hours=2),
+                    subtitle=subtitle,
                 )
             )
             created += 1

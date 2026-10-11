@@ -28,6 +28,17 @@ class TestPost:
         assert post.status == PostStatus.DRAFT
         assert post.scheduled_for is None
         assert post.published_at is None
+        assert post.subtitle == ""  # optional field defaults to empty
+
+    def test_create_draft_with_subtitle(self) -> None:
+        post = Post.create_draft(
+            writer_id=self.writer_id,
+            title="Test Post",
+            preview_content="Preview",
+            subscriber_content="Full content",
+            subtitle="  A short dek  ",
+        )
+        assert post.subtitle == "A short dek"  # stripped
 
     def test_create_scheduled(self) -> None:
         future = datetime.utcnow() + timedelta(hours=1)
@@ -42,6 +53,18 @@ class TestPost:
         assert post.scheduled_for == future
         assert len(post.events) == 1
         assert post.events[0].__class__.__name__ == "PostScheduled"
+
+    def test_create_scheduled_with_subtitle(self) -> None:
+        future = datetime.utcnow() + timedelta(hours=1)
+        post = Post.create_scheduled(
+            writer_id=self.writer_id,
+            title="Scheduled Post",
+            preview_content="Preview",
+            subscriber_content="Full",
+            scheduled_for=future,
+            subtitle="Scheduling dek",
+        )
+        assert post.subtitle == "Scheduling dek"
 
     def test_create_scheduled_fails_for_past_time(self) -> None:
         past = datetime.utcnow() - timedelta(hours=1)
@@ -131,6 +154,21 @@ class TestPost:
         assert post.title == "New Title"
         assert post.preview_content == "New Preview"
         assert post.subscriber_content == "Old Full"
+        assert post.subtitle == ""  # untouched when not passed
+
+        post.update_content(subtitle="New dek")
+        assert post.subtitle == "New dek"
+        assert post.title == "New Title"  # other fields untouched
+
+        post.update_content(subtitle="")  # empty string clears
+        assert post.subtitle == ""
+
+    def test_get_content_for_reader_includes_subtitle(self) -> None:
+        post = Post.create_draft(
+            self.writer_id, "T", "P", "F", subtitle="The dek"
+        )
+        content = post.get_content_for_reader(has_allocation=False)
+        assert content["subtitle"] == "The dek"
 
     def test_update_content_fails_if_published(self) -> None:
         post = Post.create_draft(self.writer_id, "Test", "Preview", "Full")

@@ -63,6 +63,7 @@ class PublishingService:
             title=command.title,
             preview_content=command.preview_content,
             subscriber_content=command.subscriber_content,
+            subtitle=command.subtitle,
         )
         self._post_repo.add(post)
         self._ensure_writer(command.writer_id.value)
@@ -76,6 +77,7 @@ class PublishingService:
             preview_content=command.preview_content,
             subscriber_content=command.subscriber_content,
             scheduled_for=command.scheduled_for,
+            subtitle=command.subtitle,
         )
         self._post_repo.add(post)
         self._ensure_writer(command.writer_id.value)
@@ -128,6 +130,7 @@ class PublishingService:
 
         post.update_content(
             title=command.title,
+            subtitle=command.subtitle,
             preview_content=command.preview_content,
             subscriber_content=command.subscriber_content,
         )

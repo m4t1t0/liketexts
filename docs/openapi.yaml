@@ -997,6 +997,7 @@ components:
       - id
       - writer_id
       - title
+      - subtitle
       - preview_content
       - status
       - published_at
@@ -1013,6 +1014,8 @@ components:
           type: string
           format: uuid
         title:
+          type: string
+        subtitle:
           type: string
         preview_content:
           type: string
@@ -1039,6 +1042,9 @@ components:
       properties:
         title:
           type: string
+        subtitle:
+          type: string
+          default: ''
         preview_content:
           type: string
         subscriber_content:
@@ -1053,6 +1059,7 @@ components:
       required:
       - id
       - title
+      - subtitle
       - status
       - scheduled_for
       - created_at
@@ -1061,6 +1068,8 @@ components:
           type: string
           format: uuid
         title:
+          type: string
+        subtitle:
           type: string
         status:
           type: string
@@ -1119,6 +1128,7 @@ components:
       required:
       - id
       - title
+      - subtitle
       - status
       - updated_at
       properties:
@@ -1126,6 +1136,8 @@ components:
           type: string
           format: uuid
         title:
+          type: string
+        subtitle:
           type: string
         status:
           type: string
@@ -1136,6 +1148,8 @@ components:
       type: object
       properties:
         title:
+          type: string
+        subtitle:
           type: string
         preview_content:
           type: string
@@ -1168,6 +1182,7 @@ components:
       required:
       - id
       - title
+      - subtitle
       - status
       - preview_content
       - subscriber_content
@@ -1179,6 +1194,8 @@ components:
           type: string
           format: uuid
         title:
+          type: string
+        subtitle:
           type: string
         status:
           type: string

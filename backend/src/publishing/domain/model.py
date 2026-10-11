@@ -48,6 +48,7 @@ class Post(AggregateRoot):
     id: UUID = field(default_factory=uuid4)
     writer_id: UUID = field(default_factory=uuid4)
     title: str = ""
+    subtitle: str = ""
     preview_content: str = ""
     subscriber_content: str = ""
     status: PostStatus = PostStatus.DRAFT
@@ -67,11 +68,13 @@ class Post(AggregateRoot):
         title: str,
         preview_content: str,
         subscriber_content: str,
+        subtitle: str = "",
     ) -> Post:
         """Create a new draft post."""
         post = cls(
             writer_id=writer_id,
             title=title.strip(),
+            subtitle=subtitle.strip(),
             preview_content=preview_content,
             subscriber_content=subscriber_content,
             status=PostStatus.DRAFT,
@@ -86,6 +89,7 @@ class Post(AggregateRoot):
         preview_content: str,
         subscriber_content: str,
         scheduled_for: datetime,
+        subtitle: str = "",
     ) -> Post:
         """Create a new scheduled post."""
         if scheduled_for <= datetime.utcnow():
@@ -94,6 +98,7 @@ class Post(AggregateRoot):
         post = cls(
             writer_id=writer_id,
             title=title.strip(),
+            subtitle=subtitle.strip(),
             preview_content=preview_content,
             subscriber_content=subscriber_content,
             status=PostStatus.SCHEDULED,
@@ -174,6 +179,7 @@ class Post(AggregateRoot):
     def update_content(
         self,
         title: Optional[str] = None,
+        subtitle: Optional[str] = None,
         preview_content: Optional[str] = None,
         subscriber_content: Optional[str] = None,
     ) -> None:
@@ -182,6 +188,8 @@ class Post(AggregateRoot):
 
         if title is not None:
             self.title = title.strip()
+        if subtitle is not None:
+            self.subtitle = subtitle.strip()
         if preview_content is not None:
             self.preview_content = preview_content
         if subscriber_content is not None:
@@ -200,6 +208,7 @@ class Post(AggregateRoot):
             "id": str(self.id),
             "writer_id": str(self.writer_id),
             "title": self.title,
+            "subtitle": self.subtitle,
             "preview_content": self.preview_content,
             "status": status_value,
             "published_at": self.published_at.isoformat()

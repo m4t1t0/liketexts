@@ -55,6 +55,7 @@ def create_post() -> Response | tuple[Any, ...]:
     data = request.get_json() or {}
 
     title = data.get("title", "").strip()
+    subtitle = (data.get("subtitle") or "").strip()
     preview_content = data.get("preview_content", "")
     subscriber_content = data.get("subscriber_content", "")
     scheduled_at = data.get("scheduled_at")
@@ -63,6 +64,8 @@ def create_post() -> Response | tuple[Any, ...]:
         raise BadRequest("Title is required")
     if not preview_content:
         raise BadRequest("Preview content is required")
+    if len(subtitle) > 500:
+        raise BadRequest("Subtitle is limited to 500 characters")
 
     bus = get_bus()
 
@@ -78,6 +81,7 @@ def create_post() -> Response | tuple[Any, ...]:
         command = CreateScheduledPostCommand(
             writer_id=WriterId(value=writer["id"]),
             title=title,
+            subtitle=subtitle,
             preview_content=preview_content,
             subscriber_content=subscriber_content,
             scheduled_for=scheduled_for,
@@ -86,6 +90,7 @@ def create_post() -> Response | tuple[Any, ...]:
         command = CreatePostCommand(
             writer_id=WriterId(value=writer["id"]),
             title=title,
+            subtitle=subtitle,
             preview_content=preview_content,
             subscriber_content=subscriber_content,
         )
@@ -96,6 +101,7 @@ def create_post() -> Response | tuple[Any, ...]:
         {
             "id": str(post.id),
             "title": post.title,
+            "subtitle": post.subtitle,
             "status": as_status_str(post.status),
             "scheduled_for": post.scheduled_for.isoformat()
             if post.scheduled_for
@@ -206,6 +212,7 @@ def update_post(post_id: str) -> Response | tuple[Any, ...]:
         writer_id=WriterId(value=writer["id"]),
         post_id=PostId(value=post_uuid),
         title=data.get("title"),
+        subtitle=data.get("subtitle"),
         preview_content=data.get("preview_content"),
         subscriber_content=data.get("subscriber_content"),
     )
@@ -219,6 +226,7 @@ def update_post(post_id: str) -> Response | tuple[Any, ...]:
         {
             "id": str(post.id),
             "title": post.title,
+            "subtitle": post.subtitle,
             "status": as_status_str(post.status),
             "updated_at": post.updated_at.isoformat(),
         }
@@ -299,6 +307,7 @@ def get_writer_posts() -> Response | tuple[Any, ...]:
                 {
                     "id": str(p.id),
                     "title": p.title,
+                    "subtitle": p.subtitle,
                     "status": as_status_str(p.status),
                     "preview_content": p.preview_content,
                     "subscriber_content": p.subscriber_content,

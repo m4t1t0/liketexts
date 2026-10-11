@@ -23,6 +23,7 @@ posts_table = Table(
         index=True,
     ),
     Column("title", String(500), nullable=False),
+    Column("subtitle", String(500), nullable=False, default=""),
     Column("preview_content", Text, nullable=False),
     Column("subscriber_content", Text, nullable=False),
     Column(

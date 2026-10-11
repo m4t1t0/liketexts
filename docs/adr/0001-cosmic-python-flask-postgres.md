@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-`PROMPT.md` requires a Flask backend with DDD, Hexagonal architecture, Unit of
+`docs/product-spec.md` requires a Flask backend with DDD, Hexagonal architecture, Unit of
 Work, Repository pattern, and CQRS, plus stateless JWT auth and an API-only v1
 (Vue SPA deferred). The team needs one documented way to structure bounded
 contexts (`identity`, `subscriptions`, `publishing`, `notifications`, `shared`).

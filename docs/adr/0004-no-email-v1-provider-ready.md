@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-`PROMPT.md` wants `PostPublished` → Celery + Redis worker → batched email
+`docs/product-spec.md` wants `PostPublished` → Celery + Redis worker → batched email
 (full post to allocated readers, preview + upsell to the rest). Running a real
 provider (Mailchimp later) is out of v1 scope.
 

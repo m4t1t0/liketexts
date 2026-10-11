@@ -4,7 +4,7 @@ A Substack-style platform connecting **Readers** and **Writers**. Readers pay a
 global €9.95/month fee to follow up to 5 writers simultaneously; posts have
 public `preview_content` plus `subscriber_content` gated behind the paywall.
 
-Product spec: [`PROMPT.md`](PROMPT.md) (authoritative).
+Product spec: [`docs/product-spec.md`](docs/product-spec.md) (authoritative).
 Build status & handoff: [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Stack

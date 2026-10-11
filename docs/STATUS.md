@@ -1,6 +1,6 @@
 # Liketexts — Build Status & Session Handoff
 
-Source of truth for the product is still `PROMPT.md`; this file tracks **what is
+Source of truth for the product is `docs/product-spec.md`; this file tracks **what is
 built, what was deliberately deferred, and what is left**. Last updated after
 `45b05c9` (backend suite: 88 passed; `mypy backend` and `ruff` clean;
 `frontend` production build passes).
@@ -67,10 +67,12 @@ public masked feed.
 - **Scheduled posts never auto-published** (was unreported): the Celery Beat
   container ran with an empty schedule. A `beat_schedule` entry (every 60s)
   now exists in `backend/src/notifications/tasks.py`.
-- **Follow writers** (`PROMPT.md` line 74): `POST/DELETE
+- **Follow writers** (`docs/product-spec.md`: preview emails to
+  non-subscribed followers): `POST/DELETE
   /api/v1/writers/{id}/follow` with `is_following` on the writer detail;
   preview emails now reach "all non-subscribed followers".
-- **Subscriber count metric** (`PROMPT.md` line 116): `GET /posts/writer`
+- **Subscriber count metric** (`docs/product-spec.md`: subscriber count
+  metrics on the writer dashboard): `GET /posts/writer`
   returns `subscriber_count`; `WriterSubscribersProjection` now also runs in
   the command-handler direct-persistence path (projections were bus-wired
   only, and subscription handlers don't publish via the bus).
@@ -93,7 +95,8 @@ public masked feed.
    are effectively logged out when the 15 min access token expires. Add silent
    refresh + retry on 401.
 2. **Cancel-subscription endpoint**: gateway/service support it; no route.
-3. **Rich Markdown editor**: `PROMPT.md` line 115 — split preview/subscriber
+3. **Rich Markdown editor**: `docs/product-spec.md` requires one — split
+   preview/subscriber
    fields exist, but they are plain textareas (labels mention Markdown). A
    real editor component (e.g. CodeMirror/Tiptap) is deferred.
 4. **Frontend tests**: no vitest/Playwright setup yet.
@@ -108,7 +111,12 @@ public masked feed.
 
 ## Doc map
 
-- `PROMPT.md` — product spec (authoritative). `CONTEXT.md` — glossary
+- `docs/product-spec.md` — permanent product/business spec.
+  `PROMPT.md` — transient grilling-session workspace (usually empty).
+  `CONTEXT.md` — glossary
   (roles-as-derived-state is recorded here).
-- `AGENTS.md` — agent runbook. `docs/adr/` — architecture decisions.
+- `AGENTS.md` — agent runbook.
+- `docs/architecture.md` — tech stack, bounded contexts, Cosmic Python
+  building blocks, async processing, payment gateway abstraction.
+- `docs/adr/` — architecture decisions.
 - `docs/openapi.yaml` — generated contract (never hand-edit).

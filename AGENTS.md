@@ -1,6 +1,9 @@
 # Liketexts - Agent Instructions
 
-Source of truth: `PROMPT.md` (Substack-style platform). This file is aligned to it.
+Product spec: `docs/product-spec.md`. Architecture: `docs/architecture.md`
+(tech stack, bounded contexts, Cosmic Python building blocks, async processing,
+payment gateway) and per-decision `docs/adr/`. `PROMPT.md` is a transient
+grilling-session workspace, usually empty.
 
 ## Run the App
 ```bash
@@ -37,7 +40,11 @@ No host install needed. `requirements.txt` is baked into the Docker image
 - `backend/` - Flask API (Cosmic Python); `frontend/` - Vue 3 SPA (Vite, Pinia, Router, Tailwind; types generated from `docs/openapi.yaml` via `make openapi-client`)
 - `Makefile` - Make targets (start/stop/test/lint, all Docker-based)
 - `requirements.txt` - Baked into the Docker image (no host install needed)
-- `PROMPT.md` - Product spec (authoritative)
+- `PROMPT.md` - Transient grilling-session workspace (usually empty; do not
+  put documentation here)
+- `docs/product-spec.md` - Permanent product spec (business rules)
+- `docs/architecture.md` - Technical stack, bounded contexts, Cosmic Python
+  building blocks, async processing, payment gateway abstraction
 - `docs/openapi.yaml` - Generated API spec (do not edit; run `make openapi`)
 - `docs/STATUS.md` - Build status & handoff (what's built, what's left)
 - `CONTEXT.md` - Ubiquitous language glossary
@@ -52,14 +59,18 @@ No host install needed. `requirements.txt` is baked into the Docker image
 ## Notes
 - Uses Python 3.14 (inside the Docker image; no host venv needed)
 - Host needs only Docker + Make
-- Architecture: Cosmic Python (DDD + Hexagonal + UoW + Repository + CQRS) — see `docs/adr/0001-cosmic-python-flask-postgres.md`
+- Architecture: Cosmic Python (DDD + Hexagonal + UoW + Repository + CQRS),
+  bounded contexts, and Cosmic Python building blocks — see
+  `docs/architecture.md` and
+  `docs/adr/0001-cosmic-python-flask-postgres.md`
 - Database: PostgreSQL with SQLAlchemy 2.0 Imperative Mapping + Alembic migrations
 - Auth: Stateless JWT (Access + Refresh)
-- Scope v1: API-only (Vue SPA deferred)
+- Scope v1: API-only (Vue SPA deferred) — see `docs/adr/0005-api-scope-v1.md`
 - Economics configurable (price/slots/credits in config, not hardcoded); writers publish free; readers pay to read
-- Payments: Mock now, Stripe-ready — see `docs/adr/0002-mock-payments-stripe-ready.md`
+- Payments: Mock now, Stripe-ready — see `docs/architecture.md#payment-gateway-abstraction` and `docs/adr/0002-mock-payments-stripe-ready.md`
 - No writer payouts v1, counts only — see `docs/adr/0003-no-payouts-v1.md`
-- Email: stub log v1, provider interface for Mailchimp later — see `docs/adr/0004-no-email-v1-provider-ready.md`
+- Email: stub log v1, provider interface for Mailchimp later — see
+  `docs/architecture.md#asynchronous-processing` and `docs/adr/0004-no-email-v1-provider-ready.md`
 - Testing: pytest with unit, integration, and e2e (Flask client paywall checks)
 - Default port: 5000 (macOS: AirPlay Receiver can squat on :5000 and block the
   API bind — disabling it resolves this; confirmed fixed in this environment)

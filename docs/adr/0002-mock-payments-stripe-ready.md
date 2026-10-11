@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-`PROMPT.md` requires a `PaymentGatewayAdapter(ABC)` with a mock implementation
+`docs/product-spec.md` requires a `PaymentGatewayAdapter(ABC)` with a mock implementation
 for v1 and an easy path to `StripePaymentGateway` consuming Stripe webhooks
 (`customer.subscription.created`, `invoice.payment_succeeded`).
 

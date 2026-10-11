@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-`PROMPT.md` lists a minimal endpoint core, but the writer dashboard, paywall
+`docs/product-spec.md` lists a minimal endpoint core, but the writer dashboard, paywall
 UI, and operations need a few more: post lifecycle (`publish`, `schedule`,
 `cancel`, `update`, writer listing), a public writers catalog, public preview
 reads, a payment webhook, and health probes. A spec review flagged these as
@@ -19,9 +19,9 @@ Retain as intentional v1 scope (all covered by tests):
   `GET /posts/writer` — required for draft → scheduled → published with
   soft-cancel semantics from `CONTEXT.md`.
 - Writers catalog: `GET /api/v1/writers` (searchable) + `GET /{writer_id}`
-  (profile + paywall-masked posts) — required by `PROMPT.md` writers section.
+  (profile + paywall-masked posts) — required by `docs/product-spec.md` writers section.
 - Public reads: `GET /posts/{id}` without auth returns preview only
-  (`PROMPT.md`: preview free to public); authenticated readers get subscriber
+  (`docs/product-spec.md`: preview free to public); authenticated readers get subscriber
   content when allocated.
 - Ops: `POST /api/v1/auth/refresh` (refresh rotation), public
   `POST /api/v1/subscriptions/webhook`, `GET /health` (liveness) +

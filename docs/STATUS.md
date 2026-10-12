@@ -113,7 +113,7 @@ public masked feed.
 
 - `docs/product-spec.md` — permanent product/business spec.
   `PROMPT.md` — transient grilling-session workspace (usually empty).
-  `CONTEXT.md` — glossary
+  `GLOSSARY.md` — glossary
   (roles-as-derived-state is recorded here).
 - `AGENTS.md` — agent runbook.
 - `docs/architecture.md` — tech stack, bounded contexts, Cosmic Python

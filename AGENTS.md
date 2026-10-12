@@ -47,7 +47,7 @@ No host install needed. `requirements.txt` is baked into the Docker image
   building blocks, async processing, payment gateway abstraction
 - `docs/openapi.yaml` - Generated API spec (do not edit; run `make openapi`)
 - `docs/STATUS.md` - Build status & handoff (what's built, what's left)
-- `CONTEXT.md` - Ubiquitous language glossary
+- `GLOSSARY.md` - Ubiquitous language glossary
 - `docs/adr/` - Architecture Decision Records
 - `backend/src/identity/` - Authentication & User Management (single User, Reader/Writer capabilities, JWT); `api_auth.py` shared Flask auth helpers; `writers_api.py` Writers Catalog (`GET /api/v1/writers`)
 - `backend/src/subscriptions/` - Subscription, Allocation Slots (5), Change Credits (2), config-driven

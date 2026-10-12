@@ -4,7 +4,7 @@
      plan/design context for the feature you want grilled here; the session
      then interviews you (grilling skill + domain-modeling skill) and lands
      its conclusions in permanent docs:
-       - glossary changes   -> CONTEXT.md
+       - glossary changes   -> GLOSSARY.md
        - decisions          -> docs/adr/ (new numbered files)
        - product rules      -> docs/product-spec.md
      Permanent content must not live in this file. Currently: EMPTY.

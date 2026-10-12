@@ -10,7 +10,7 @@ Session lifecycle:
    workspace file — usually filled by the user before invoking this skill).
 2. Call the Skill tool twice, for "grilling" and "domain-modeling". The
    interview runs in rounds until the frontier is empty (shared understanding).
-3. **Output**: conclusions land in permanent docs only — `CONTEXT.md`
+3. **Output**: conclusions land in permanent docs only — `GLOSSARY.md`
    (glossary), `docs/adr/` (new numbered ADRs), `docs/product-spec.md`
    (product rules). Never write documentation into `PROMPT.md`.
 4. **Wrap-up (after the user confirms shared understanding and the docs are

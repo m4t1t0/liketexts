@@ -17,7 +17,7 @@ Retain as intentional v1 scope (all covered by tests):
 - Publishing lifecycle: `POST /posts/{id}/publish`, `POST /posts/{id}/schedule`,
   `DELETE /posts/{id}` (cancel), `PATCH /posts/{id}` (update),
   `GET /posts/writer` — required for draft → scheduled → published with
-  soft-cancel semantics from `CONTEXT.md`.
+  soft-cancel semantics from `GLOSSARY.md`.
 - Writers catalog: `GET /api/v1/writers` (searchable) + `GET /{writer_id}`
   (profile + paywall-masked posts) — required by `docs/product-spec.md` writers section.
 - Public reads: `GET /posts/{id}` without auth returns preview only

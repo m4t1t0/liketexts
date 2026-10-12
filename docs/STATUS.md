@@ -119,4 +119,6 @@ public masked feed.
 - `docs/architecture.md` — tech stack, bounded contexts, Cosmic Python
   building blocks, async processing, payment gateway abstraction.
 - `docs/adr/` — architecture decisions.
+- `docs/agents/` — per-repo agent config written by `/setup-matt-pocock-skills`:
+  issue tracker (Trello board mapping) and domain-doc consumer rules.
 - `docs/openapi.yaml` — generated contract (never hand-edit).

@@ -5,6 +5,19 @@ Product spec: `docs/product-spec.md`. Architecture: `docs/architecture.md`
 payment gateway) and per-decision `docs/adr/`. `PROMPT.md` is a transient
 grilling-session workspace, usually empty.
 
+## Agent skills
+
+### Issue tracker
+
+Engineering-flow tickets are Trello cards on the Liketexts board
+(Backlog / In Progress / Done), driven through the Trello MCP tools. See
+`docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the root + `docs/adr/`. See
+`docs/agents/domain.md`.
+
 ## Run the App
 ```bash
 make start

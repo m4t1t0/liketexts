@@ -121,4 +121,6 @@ public masked feed.
 - `docs/adr/` — architecture decisions.
 - `docs/agents/` — per-repo agent config written by `/setup-matt-pocock-skills`:
   issue tracker (Trello board mapping) and domain-doc consumer rules.
+- `docs/research/` — standing research notes (e.g. the Flask->FastAPI
+  migration cost analysis behind ADR-0006).
 - `docs/openapi.yaml` — generated contract (never hand-edit).

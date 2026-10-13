@@ -79,11 +79,8 @@ def _check_redis() -> dict:
 
 
 def _check_migrations() -> dict:
-    """Check applied migrations match alembic heads (skipped on SQLite bootstrap)."""
+    """Check applied migrations match alembic heads."""
     try:
-        settings = get_settings()
-        if "sqlite" in settings.database_url:
-            return {"ok": True, "detail": "skipped (sqlite bootstrap)", "skipped": True}
         from pathlib import Path
 
         from alembic.config import Config

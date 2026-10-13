@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import AbstractContextManager
 from typing import Any
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.src.shared.config import get_settings
@@ -23,23 +23,12 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork, AbstractContextManager):
 
     def _create_session_factory(self) -> sessionmaker:
         settings = get_settings()
-        is_sqlite = "sqlite" in settings.database_url
-        engine_kwargs: dict[str, Any] = {"pool_pre_ping": True}
-        if not is_sqlite:
-            engine_kwargs["pool_size"] = settings.database_pool_size
-            engine_kwargs["max_overflow"] = settings.database_max_overflow
-
-        engine = create_engine(settings.database_url, **engine_kwargs)
-
-        # Enable foreign keys for SQLite
-        if is_sqlite:
-
-            @event.listens_for(engine, "connect")
-            def set_sqlite_pragma(dbapi_connection, connection_record):
-                cursor = dbapi_connection.cursor()
-                cursor.execute("PRAGMA foreign_keys=ON")
-                cursor.close()
-
+        engine = create_engine(
+            settings.database_url,
+            pool_pre_ping=True,
+            pool_size=settings.database_pool_size,
+            max_overflow=settings.database_max_overflow,
+        )
         return sessionmaker(bind=engine, expire_on_commit=False)
 
     def __enter__(self) -> SqlAlchemyUnitOfWork:

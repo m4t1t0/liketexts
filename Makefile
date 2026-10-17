@@ -52,7 +52,7 @@ build-api: ## Build the api image only
 test: build-api ## ✅ Run pytest in api (T=tests/unit for a subset)
 	$(COMPOSE) up -d db redis
 	-$(COMPOSE) exec db psql -U liketexts -d liketexts -c "CREATE DATABASE liketexts_test"
-	$(COMPOSE) run --rm -e TEST_DATABASE_URL=postgresql://liketexts:liketexts@db:5432/liketexts_test -e REDIS_URL=redis://redis:6379/0 -e CELERY_BROKER_URL=redis://redis:6379/1 -e CELERY_RESULT_BACKEND=redis://redis:6379/2 api python -m pytest $(T) -q
+	$(COMPOSE) run --rm -e TEST_DATABASE_URL=postgresql://liketexts:liketexts@db:5432/liketexts_test -e REDIS_URL=redis://redis:6379/0 -e CELERY_BROKER_URL=redis://redis:6379/3 -e CELERY_RESULT_BACKEND=redis://redis:6379/4 api python -m pytest $(T) -q
 
 lint: build-api ## 🧹 Ruff check in api
 	$(COMPOSE) run --rm api ruff check backend app.py scripts

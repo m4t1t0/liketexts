@@ -110,13 +110,26 @@ class NotificationService:
 
 def get_subscribers_with_allocation(
     post_writer_id: UUID,
-) -> list[tuple["User", "Subscription"]]:
-    """Get all users with active allocation to a writer using read model."""
+) -> list[tuple[UUID, str]]:
+    """(reader_id, email) for all users with active allocation to a writer.
+
+    Plain data only: ORM entities must not cross the UoW boundary — the
+    session's rollback on exit expiry makes any detached-entity consumer
+    raise DetachedInstanceError (seen first in send_post_published_emails,
+    2026-10).
+    """
     with SqlAlchemyUnitOfWork() as uow:
-        return read_model_get_subscribers(uow.session, post_writer_id)
+        return [
+            (user.id, user.email)
+            for user, _ in read_model_get_subscribers(uow.session, post_writer_id)
+        ]
 
 
-def get_followers_without_allocation(post_writer_id: UUID) -> list["User"]:
-    """Get users following a writer but without allocation using read model."""
+def get_followers_without_allocation(post_writer_id: UUID) -> list[tuple[UUID, str]]:
+    """(reader_id, email) for followers without allocation. See the
+    plain-data caveat on get_subscribers_with_allocation."""
     with SqlAlchemyUnitOfWork() as uow:
-        return read_model_get_followers(uow.session, post_writer_id)
+        return [
+            (user.id, user.email)
+            for user in read_model_get_followers(uow.session, post_writer_id)
+        ]

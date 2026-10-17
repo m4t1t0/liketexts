@@ -5,6 +5,7 @@ from celery import Celery
 from uuid import UUID
 
 from backend.src.shared.config import get_settings
+from backend.src.shared.domain.value_objects import as_status_str
 from backend.src.notifications.service import (
     get_subscribers_with_allocation,
     get_followers_without_allocation,
@@ -98,7 +99,7 @@ def send_post_published_emails(self, post_id: str) -> dict:
             if not post:
                 return {"status": "error", "message": "Post not found"}
 
-            if post.status.value != "published":
+            if as_status_str(post.status) != "published":
                 return {"status": "skipped", "message": "Post not published"}
 
             user_repo = SqlAlchemyUserRepository(uow.session)
@@ -112,20 +113,20 @@ def send_post_published_emails(self, post_id: str) -> dict:
 
             recipients = [
                 EmailRecipient(
-                    user_id=user.id,
-                    email=user.email,
+                    user_id=reader_id,
+                    email=email,
                     has_allocation=True,
                     writer_id=writer.id,
                 )
-                for user, _ in subscribers
+                for reader_id, email in subscribers
             ] + [
                 EmailRecipient(
-                    user_id=user.id,
-                    email=user.email,
+                    user_id=reader_id,
+                    email=email,
                     has_allocation=False,
                     writer_id=writer.id,
                 )
-                for user in followers
+                for reader_id, email in followers
             ]
 
             sender = StubEmailSender()

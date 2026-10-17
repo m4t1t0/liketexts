@@ -5,6 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from backend.src.shared.config import get_settings
+from backend.src.shared.domain.events import DomainEvent
 from backend.src.subscriptions.adapters.repository import SubscriptionRepository
 from backend.src.subscriptions.domain.model import Subscription, SubscriptionStatus
 from backend.src.adapters import PaymentGatewayAdapter, MockPaymentGateway
@@ -21,6 +22,38 @@ class SubscriptionService:
         self._subscription_repo = subscription_repo
         self._payment_gateway = payment_gateway or MockPaymentGateway()
         self._settings = get_settings()
+        self._status_projection_events: list[DomainEvent] = []
+
+    def _apply_status(self, subscription: "Subscription", status) -> None:
+        """Update status and remember the domain event for projection.
+
+        Command handlers mutate aggregates without publishing via the bus,
+        so the bus-registered SubscriptionStatusProjection never sees these
+        events; persist them explicitly in handle_webhook (STATUS.md debt,
+        fixed 2026-10). """
+        subscription.update_status(status)
+        for event in subscription.events:
+            if event.__class__.__name__ == "SubscriptionStatusChanged":
+                self._status_projection_events.append(event)
+
+    def _persist_status_projections(self) -> None:
+        """Run remembered status events through the read-model projection."""
+        if not self._status_projection_events:
+            return
+        from backend.src.subscriptions.adapters.read_model import (
+            SubscriptionStatusProjection,
+        )
+        from backend.src.subscriptions.adapters.sqlalchemy_repository import (
+            SqlAlchemySubscriptionRepository,
+        )
+
+        if isinstance(self._subscription_repo, SqlAlchemySubscriptionRepository):
+            projector = SubscriptionStatusProjection(
+                self._subscription_repo.session
+            )
+            for event in self._status_projection_events:
+                projector.handle(event)
+        self._status_projection_events.clear()
 
     def create_subscription(
         self, reader_id: UUID, payment_method_id: str
@@ -69,6 +102,7 @@ class SubscriptionService:
         if handler_name is None:
             return
         getattr(self, handler_name)(payload)
+        self._persist_status_projections()
 
     def _handle_subscription_created(self, payload: dict) -> None:
         """Handle subscription created webhook (Stripe customer.subscription.created)."""
@@ -79,9 +113,9 @@ class SubscriptionService:
         subscription = self._subscription_repo.get_by_external_id(external_id)
         if subscription:
             try:
-                subscription.update_status(SubscriptionStatus(status))
+                self._apply_status(subscription, SubscriptionStatus(status))
             except ValueError:
-                subscription.update_status(SubscriptionStatus.ACTIVE)
+                self._apply_status(subscription, SubscriptionStatus.ACTIVE)
 
     def _handle_subscription_updated(self, payload: dict) -> None:
         """Handle subscription updated webhook."""
@@ -91,7 +125,7 @@ class SubscriptionService:
             return
         subscription = self._subscription_repo.get_by_external_id(external_id)
         if subscription:
-            subscription.update_status(SubscriptionStatus(status))
+            self._apply_status(subscription, SubscriptionStatus(status))
 
     def _handle_subscription_canceled(self, payload: dict) -> None:
         """Handle subscription canceled webhook."""
@@ -100,7 +134,7 @@ class SubscriptionService:
             return
         subscription = self._subscription_repo.get_by_external_id(external_id)
         if subscription:
-            subscription.update_status(SubscriptionStatus.CANCELED)
+            self._apply_status(subscription, SubscriptionStatus.CANCELED)
 
     def _handle_payment_failed(self, payload: dict) -> None:
         """Handle payment failed webhook."""
@@ -109,7 +143,7 @@ class SubscriptionService:
             return
         subscription = self._subscription_repo.get_by_external_id(external_id)
         if subscription:
-            subscription.update_status(SubscriptionStatus.PAST_DUE)
+            self._apply_status(subscription, SubscriptionStatus.PAST_DUE)
 
     def _handle_payment_succeeded(self, payload: dict) -> None:
         """Handle payment succeeded webhook - renew billing cycle."""
@@ -121,7 +155,7 @@ class SubscriptionService:
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.PAST_DUE,
         ):
-            subscription.update_status(SubscriptionStatus.ACTIVE)
+            self._apply_status(subscription, SubscriptionStatus.ACTIVE)
             subscription.renew_billing_cycle()
 
     def renew_billing_cycle(self, reader_id: UUID) -> Optional[Subscription]:

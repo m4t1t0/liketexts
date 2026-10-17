@@ -106,3 +106,60 @@ class TestSubscriptionLifecycle:
 
             renewed = service.renew_billing_cycle(reader_id)
             assert renewed.change_credits == 2
+  
+
+    def test_webhook_status_change_clears_writer_subscribers(self) -> None:
+        """Regression (2026-10): SubscriptionStatusProjection was bus-wired
+        only, and subscription command handlers never publish — so
+        canceled/past-due subscriptions kept their writer_subscribers rows.
+        Status events are now persisted as projections explicitly, with the
+        projection logic fixed to treat the SubscriptionStatus enum (not
+        just plain strings) correctly."""
+        from datetime import datetime
+
+        from sqlalchemy import select
+
+        from backend.src.subscriptions.adapters.orm import writer_subscribers_table
+        from backend.src.subscriptions.adapters.read_model import _upsert_subscriber
+
+        reader_id = _make_reader(f"proj-{uuid4().hex[:8]}@test.com")
+        writer_id = _make_reader(f"proj-w-{uuid4().hex[:8]}@test.com")
+        with SqlAlchemyUnitOfWork() as uow:
+            service, repo, _ = _service_and_repo(uow)
+            sub = service.create_subscription(reader_id, "pm_test")
+            uow.commit()
+            stored = repo.get_by_reader(reader_id)
+            stored.allocate_writer(writer_id)
+            _upsert_subscriber(
+                uow.session, writer_id, reader_id, stored.id, datetime.utcnow()
+            )
+            uow.commit()
+
+            def subscriber_rows():
+                return uow.session.execute(
+                    select(writer_subscribers_table.c.reader_id).where(
+                        writer_subscribers_table.c.subscription_id == stored.id
+                    )
+                ).all()
+
+            assert len(subscriber_rows()) == 1
+
+            # payment_failed -> PAST_DUE counts as inactive: rows cleared
+            service.handle_webhook(
+                "invoice.payment_failed",
+                {"subscription_id": stored.external_subscription_id},
+            )
+            uow.commit()
+            assert subscriber_rows() == []
+            reloaded = repo.get_by_external_id(stored.external_subscription_id)
+            assert reloaded.status == SubscriptionStatus.PAST_DUE
+
+            # Renewal re-activates without resurrecting cleared allocations
+            service.handle_webhook(
+                "invoice.payment_succeeded",
+                {"subscription_id": stored.external_subscription_id},
+            )
+            uow.commit()
+            reactivated = repo.get_by_external_id(stored.external_subscription_id)
+            assert reactivated.status == SubscriptionStatus.ACTIVE
+            assert subscriber_rows() == []

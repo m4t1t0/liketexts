@@ -227,12 +227,13 @@ class SubscriptionStatusProjection(EventHandler[DomainEvent]):
     def handle(self, event: DomainEvent) -> None:
         if event.__class__.__name__ == "SubscriptionStatusChanged":
             new_status = getattr(event, "new_status", None)
-            # NOTE: enum members are always truthy; plain values compare
-            # against "active". Structured to keep mypy narrowing sound.
-            if hasattr(new_status, "value"):
-                became_inactive = True
-            else:
-                became_inactive = new_status != "active"
+            if new_status is None:
+                return
+            # new_status may be the SubscriptionStatus enum (domain events are
+            # created in-process) or a plain string.
+            from backend.src.shared.domain.value_objects import as_status_str
+
+            became_inactive = as_status_str(new_status) != "active"
             if became_inactive:
                 # Subscription became inactive - remove all allocations
                 sub_id = AllocationLogProjection._to_uuid(event.aggregate_id)

@@ -64,6 +64,14 @@ public masked feed.
 
 ## Resolved (this pass)
 
+- **SubscriptionStatusProjection never fired** (STATUS legacy debt): webhook
+  status changes now run the read-model projection directly
+  (`SubscriptionService._persist_status_projections`), with fixed projection
+  logic (the SubscriptionStatus enum was previously treated as inactive
+  because of its `.value` attribute). Past-due/canceled subscriptions thus
+  clear their `writer_subscribers` rows; renewal re-activates without
+  resurrecting allocations.
+
 - **Scheduled posts never auto-published** (was unreported): the Celery Beat
   container ran with an empty schedule. A `beat_schedule` entry (every 60s)
   now exists in `backend/src/notifications/tasks.py`.

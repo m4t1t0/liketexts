@@ -69,6 +69,29 @@ def _start_mappers_and_create_tables() -> None:
         create_identity_tables(uow.session.bind)
         create_sub_tables(uow.session.bind)
         create_pub_tables(uow.session.bind)
+        # The test schema is created via metadata.create_all (current by
+        # construction), not Alembic — stamp alembic_version at head so the
+        # /health/ready migration check matches production semantics.
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from sqlalchemy import text
+
+        repo_root = Path(__file__).resolve().parent.parent
+        cfg = Config()
+        cfg.set_main_option("script_location", str(repo_root / "backend" / "alembic"))
+        heads = sorted(ScriptDirectory.from_config(cfg).get_heads())
+        uow.session.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS alembic_version "
+                "(version_num VARCHAR(32) NOT NULL PRIMARY KEY)"
+            )
+        )
+        uow.session.execute(text("DELETE FROM alembic_version"))
+        for head in heads:
+            uow.session.execute(
+                text("INSERT INTO alembic_version (version_num) VALUES (:h)"),
+                {"h": head},
+            )
         uow.commit()
 
 

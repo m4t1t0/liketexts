@@ -22,7 +22,14 @@ Retain as intentional v1 scope (all covered by tests):
   (profile + paywall-masked posts) — required by `docs/product-spec.md` writers section.
 - Public reads: `GET /posts/{id}` without auth returns preview only
   (`docs/product-spec.md`: preview free to public); authenticated readers get subscriber
-  content when allocated.
+  content when allocated. `GET /posts/recent` serves the public homepage feed
+  (preview-masked, ordered by recency).
+- Profile ops: `PATCH /api/v1/auth/me` (partial profile update: first/last
+  name, avatar_url) and `POST /api/v1/auth/avatar` (local file storage v1).
+- Follow: `POST /api/v1/writers/{writer_id}/follow` and its `DELETE` twin,
+  plus `is_following` on the writer detail — mandated by the
+  `docs/product-spec.md` async-email rule ("preview emails to all
+  non-subscribed followers"); no allocation slot, no credits.
 - Ops: `POST /api/v1/auth/refresh` (refresh rotation), public
   `POST /api/v1/subscriptions/webhook`, `GET /health` (liveness) +
   `GET /health/ready` (DB, Redis, migrations).
@@ -34,3 +41,5 @@ Retain as intentional v1 scope (all covered by tests):
 
 - Endpoint additions that serve the listed dashboards/paywall/ops are features,
   not creep; genuinely new product surface needs a new ADR.
+- Response-shape additions (`subscriber_count`, `subtitle`, `is_following`)
+  follow the same rule: they serve the listed dashboards and email flows.

@@ -12,6 +12,26 @@ from backend.src.notifications.service import (
 
 settings = get_settings()
 
+
+def _ensure_orm_mappers() -> None:
+    """Start the imperative ORM mappings (idempotent).
+
+    The API process starts them in the app factory, but the Celery worker
+    never runs the factory — without this, any repository call in a task
+    fails with an SQLAlchemy coercion error on the unmapped aggregates
+    (seen first on process_scheduled_posts, 2026-10).
+    """
+    from backend.src.identity.adapters.orm import start_mappers as start_identity_mappers
+    from backend.src.subscriptions.adapters.orm import start_mappers as start_subscriptions_mappers
+    from backend.src.publishing.adapters.orm import start_mappers as start_publishing_mappers
+
+    start_identity_mappers()
+    start_subscriptions_mappers()
+    start_publishing_mappers()
+
+
+_ensure_orm_mappers()
+
 celery_app = Celery(
     "liketexts_notifications",
     broker=settings.celery_broker_url,
